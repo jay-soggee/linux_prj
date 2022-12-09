@@ -199,10 +199,27 @@ static int __init ModuleInit(void) {
         printk("Could not get PWM1!\n");
         goto AddError;
     }
+
+    /* GPIO 13 init */
+	if(gpio_request(13, "rpi-gpio-13")) {
+		printk("Can not allocate GPIO 13\n");
+		goto AddError;
+	}
+
+	/* Set GPIO 13 direction */
+	if(gpio_direction_output(13, 0)) {
+		printk("Can not set GPIO 13 to output!\n");
+		goto Gpio13Error;
+	}
+
+    gpio_set_value(13, 1);
+
     genNotes();
 	timer_setup(&my_timer, play_next_node, 0);
 
     return 0;
+Gpio4Error:
+    gpio_free(13);
 AddError:
     device_destroy(my_class, my_device_nr);
 FileError:
@@ -216,6 +233,8 @@ ClassError:
  * @brief This function is called, when the module is removed from the kernel
  */
 static void __exit ModuleExit(void) {
+    gpio_set_value(13, 0);
+    gpio_free(13);
     pwm_disable(pwm1);
     pwm_free(pwm1);
     cdev_del(&my_device);
