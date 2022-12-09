@@ -25,6 +25,8 @@ static struct timer_list my_timer;
 
 /* Variables */
 struct pwm_device *pwm1 = NULL;
+
+///// MIDI Configurations /////
 #define BPM108 70
 #define BPM126 60
 #define NOTE_BREAK 1000000000
@@ -59,6 +61,7 @@ void genNotes() {
 #endif
 }
 
+/// @brief interrupt callback function.
 void play_next_node(struct timer_list * data) {
     unsigned long play_dur = *(++now_playing_duration);
     unsigned long play_scl = *(++now_playing_scale);
@@ -93,28 +96,38 @@ static ssize_t driver_write(struct file *File, const char *user_buffer, size_t c
     /* Set PWM on time */
     switch (value) {
         case 'a':
+            printk("buzzer driver : song a\n");
             now_playing_duration = note_durations[0];
             now_playing_scale = note_scale[0];
-            pwm_config(pwm1, play_scl / 2, play_scl);
-            pwm_enable(pwm1);
-            mod_timer(&my_timer, jiffies + play_dur);
-            
-
-
-            pwm_config(pwm1, FRONT, PWM_PERIOD);
             break;
-        case 'l':
-            pwm_config(pwm0, LEFT,  PWM_PERIOD);
+        case 'b':
+            printk("buzzer driver : song b\n");
+            now_playing_duration = note_durations[1];
+            now_playing_scale = note_scale[1];
             break;
-        case 'r':
-            pwm_config(pwm0, RIGHT, PWM_PERIOD);
+        case 'c':
+            printk("buzzer driver : song c\n");
+            now_playing_duration = note_durations[2];
+            now_playing_scale = note_scale[2];
+            break;
+        case 'd':
+            printk("buzzer driver : song d\n");
+            now_playing_duration = note_durations[3];
+            now_playing_scale = note_scale[3];
+            break;
+        case 'e':
+            printk("buzzer driver : song e\n");
+            now_playing_duration = note_durations[4];
+            now_playing_scale = note_scale[4];
             break;
         default:
-            printk("Invalid Value\n");
+            printk("buzzer driver : Invalid Value\n");
             break;
     }
 
-    now_playing_until = jiffies + *now_playing_duration;
+    pwm_config(pwm1, *(now_playing_scale) / 2, *(now_playing_scale));
+    pwm_enable(pwm1);
+    mod_timer(&my_timer, jiffies + *(now_playing_duration));
 
     /* Calculate data */
     delta = to_copy - not_copied;
