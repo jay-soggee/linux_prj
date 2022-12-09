@@ -45,18 +45,19 @@ unsigned long note_scales[5][7] = {
     { 3822255, 4545454, 5726914, 3822255, 4545454, 5726914, NOTE_BREAK }// mission failed...
 };
 unsigned long* now_playing_duration = NULL, * now_playing_scale = NULL;
-void genNotes() {
+void genNotes(void) {
+    int i, j;
     // BPM108
-    for (int i = 0; i < 3; i++) 
-        for (int j = 0; j < 6; j++)
+    for (i = 0; i < 3; i++) 
+        for (j = 0; j < 6; j++)
             note_durations[i][j] = note_durations[i][j] * msecs_to_jiffies(BPM108);
     // BPM126
-    for (int i = 3; i < 5; i++) 
-        for (int j = 0; j < 6; j++)
+    for (i = 3; i < 5; i++) 
+        for (j = 0; j < 6; j++)s
             note_durations[i][j] = note_durations[i][j] * msecs_to_jiffies(BPM126);
 #ifdef DEBUG
-    for (int i = 0; i < 5; i++) 
-        for (int j = 0; j < 6; j++)
+    for (i = 0; i < 5; i++) 
+        for (j = 0; j < 6; j++)
             printk("%lu\n",note_durations[i][j]);
 #endif
 }
