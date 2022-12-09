@@ -53,7 +53,7 @@ void genNotes(void) {
             note_durations[i][j] = note_durations[i][j] * msecs_to_jiffies(BPM108);
     // BPM126
     for (i = 3; i < 5; i++) 
-        for (j = 0; j < 6; j++)s
+        for (j = 0; j < 6; j++)
             note_durations[i][j] = note_durations[i][j] * msecs_to_jiffies(BPM126);
 #ifdef DEBUG
     for (i = 0; i < 5; i++) 
