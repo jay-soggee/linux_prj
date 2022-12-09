@@ -7,7 +7,7 @@
 #include <linux/jiffies.h>
 #include <linux/timer.h>
 
-#define DEBUG
+//#define DEBUG
 
 /* Meta Information */
 MODULE_LICENSE("GPL");
