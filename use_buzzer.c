@@ -13,7 +13,7 @@ int main(int argc, char **argv){
         return -1;
     }
 
-    int dev = open("/dev/my_buzzer_driver",O_RDWR);
+    int dev = open("/dev/driver_buzzer",O_RDWR);
     if(dev == -1){
         printf("Opening was not possible!\n");
         return -1;
