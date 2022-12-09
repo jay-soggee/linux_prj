@@ -5,6 +5,7 @@
 #include <linux/uaccess.h>
 #include <linux/pwm.h>
 #include <linux/jiffies.h>
+#include <linux/timer.h>
 
 #define DEBUG
 
@@ -17,6 +18,7 @@ MODULE_DESCRIPTION("A simple driver to access the Hardware PWM IP");
 static dev_t my_device_nr;
 static struct class *my_class;
 static struct cdev my_device;
+static struct timer_list my_timer;
 
 #define DRIVER_NAME "my_pwm_driver"
 #define DRIVER_CLASS "MyModuleClass"
@@ -33,14 +35,14 @@ unsigned long note_durations[5][7] = {
     { 2, 2, 2, 2, 4, },
     { 2, 2, 2, 2, 2, 2, }
 };
-unsigned long note_scale[5][6] = {
-    { 6811989, NOTE_BREAK, 6811989, NOTE_BREAK, 4545454, }, // cham, cham, cham!
-    { 6428243, NOTE_BREAK, 5102101, NOTE_BREAK, 4290337, }, // win!
-    { 6428243, NOTE_BREAK, 6428243, },                      // lose...
-    { 6428243, 4815742, 3822255, 6428243, 4815742, },       // victory!
-    { 3822255, 4545454, 5726914, 3822255, 4545454, 5726914 }// mission failed...
+unsigned long note_scale[5][7] = {
+    { 6811989, NOTE_BREAK, 6811989, NOTE_BREAK, 4545454, NOTE_BREAK },  // cham, cham, cham!
+    { 6428243, NOTE_BREAK, 5102101, NOTE_BREAK, 4290337, NOTE_BREAK },  // win!
+    { 6428243, NOTE_BREAK, 6428243, NOTE_BREAK },                       // lose...
+    { 6428243, 4815742, 3822255, 6428243, 4815742, NOTE_BREAK },        // victory!
+    { 3822255, 4545454, 5726914, 3822255, 4545454, 5726914, NOTE_BREAK }// mission failed...
 };
-unsigned long now_playing_until = 0, * now_playing = NULL;
+unsigned long* now_playing_duration = NULL, * now_playing_scale = NULL;
 void genNotes() {
     // BPM108
     for (int i = 0; i < 3; i++) 
@@ -55,6 +57,23 @@ void genNotes() {
         for (int j = 0; j < 6; j++)
             printk("%lu\n",note_durations[i][j]);
 #endif
+}
+
+void play_next_node(struct timer_list * data) {
+    unsigned long play_dur = *(++now_playing_duration);
+    unsigned long play_scl = *(++now_playing_scale);
+    if (!play_dur) {     // if playing this song is done.
+        pwm_disable(pwm1);
+    }
+    else {               // if not, play it.
+        if (play_scl == NOTE_BREAK)
+            pwm_disable(pwm1);
+        else {
+            pwm_config(pwm1, play_scl / 2, play_scl);
+            pwm_enable(pwm1);
+        }
+        mod_timer(&my_timer, jiffies + play_dur);
+    }
 }
 
 
@@ -74,13 +93,12 @@ static ssize_t driver_write(struct file *File, const char *user_buffer, size_t c
     /* Set PWM on time */
     switch (value) {
         case 'a':
-            if (!now_playing_until) {
-                now_playing = note_durations[0];
-            } else if (now_playing_until < jiffies) {
-                now_playing += 1;
-            }
-
-
+            now_playing_duration = note_durations[0];
+            now_playing_scale = note_scale[0];
+            pwm_config(pwm1, play_scl / 2, play_scl);
+            pwm_enable(pwm1);
+            mod_timer(&my_timer, jiffies + play_dur);
+            
 
 
             pwm_config(pwm1, FRONT, PWM_PERIOD);
@@ -96,7 +114,7 @@ static ssize_t driver_write(struct file *File, const char *user_buffer, size_t c
             break;
     }
 
-    now_playing_until = jiffies + *now_playing;
+    now_playing_until = jiffies + *now_playing_duration;
 
     /* Calculate data */
     delta = to_copy - not_copied;
@@ -168,7 +186,7 @@ static int __init ModuleInit(void) {
         goto AddError;
     }
     genNotes();
-
+	timer_setup(&my_timer, play_next_node, 0);
 
     return 0;
 AddError:
