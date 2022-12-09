@@ -20,7 +20,7 @@ static struct class *my_class;
 static struct cdev my_device;
 static struct timer_list my_timer;
 
-#define DRIVER_NAME "my_pwm_driver"
+#define DRIVER_NAME "my_buzzer_driver"
 #define DRIVER_CLASS "MyModuleClass"
 
 /* Variables */
@@ -37,7 +37,7 @@ unsigned long note_durations[5][7] = {
     { 2, 2, 2, 2, 4, },
     { 2, 2, 2, 2, 2, 2, }
 };
-unsigned long note_scale[5][7] = {
+unsigned long note_scales[5][7] = {
     { 6811989, NOTE_BREAK, 6811989, NOTE_BREAK, 4545454, NOTE_BREAK },  // cham, cham, cham!
     { 6428243, NOTE_BREAK, 5102101, NOTE_BREAK, 4290337, NOTE_BREAK },  // win!
     { 6428243, NOTE_BREAK, 6428243, NOTE_BREAK },                       // lose...
@@ -98,27 +98,27 @@ static ssize_t driver_write(struct file *File, const char *user_buffer, size_t c
         case 'a':
             printk("buzzer driver : song a\n");
             now_playing_duration = note_durations[0];
-            now_playing_scale = note_scale[0];
+            now_playing_scale = note_scales[0];
             break;
         case 'b':
             printk("buzzer driver : song b\n");
             now_playing_duration = note_durations[1];
-            now_playing_scale = note_scale[1];
+            now_playing_scale = note_scales[1];
             break;
         case 'c':
             printk("buzzer driver : song c\n");
             now_playing_duration = note_durations[2];
-            now_playing_scale = note_scale[2];
+            now_playing_scale = note_scales[2];
             break;
         case 'd':
             printk("buzzer driver : song d\n");
             now_playing_duration = note_durations[3];
-            now_playing_scale = note_scale[3];
+            now_playing_scale = note_scales[3];
             break;
         case 'e':
             printk("buzzer driver : song e\n");
             now_playing_duration = note_durations[4];
-            now_playing_scale = note_scale[4];
+            now_playing_scale = note_scales[4];
             break;
         default:
             printk("buzzer driver : Invalid Value\n");
