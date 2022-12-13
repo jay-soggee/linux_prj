@@ -4,6 +4,7 @@
 #include <linux/cdev.h>
 #include <linux/uaccess.h>
 #include <linux/pwm.h>
+#include <linux/gpio.h>
 #include <linux/jiffies.h>
 #include <linux/timer.h>
 
@@ -24,7 +25,7 @@ static struct timer_list my_timer;
 #define DRIVER_CLASS "MyModuleClass"
 
 /* Variables */
-struct pwm_device *pwm1 = NULL;
+struct pwm_device *pwm1 = NULL; 
 
 ///// MIDI Configurations /////
 #define BPM108 70
