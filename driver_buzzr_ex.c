@@ -96,6 +96,7 @@ static int __init ModuleInit(void) {
 		printk("Can not create device file!\n");
 		goto FileError;
 	}
+	printk("Device file created!\n");
 
 	/* Initialize device file */
 	cdev_init(&my_device, &fops);
@@ -105,6 +106,7 @@ static int __init ModuleInit(void) {
 		printk("Registering of device to kernel failed!\n");
 		goto AddError;
 	}
+	printk("Registering of device to kernel success!\n");
 
 ///////////////////// port request /////////////////////
 
@@ -113,12 +115,14 @@ static int __init ModuleInit(void) {
 		printk("Could not get PWM0!\n");
 		goto AddError;
 	}
+	printk("Requesting PWM0 success!\n");
 
 	/* GPIO 12 init */
 	if(gpio_request(12, "rpi-gpio-12")) {
 		printk("Can not allocate GPIO 12\n");
 		goto PwmError;
 	}
+	printk("Requesting GPIO 12 success!\n");
 
 	/* Set GPIO 12 direction */
 	if(gpio_direction_output(12, 0)) {
@@ -131,6 +135,7 @@ static int __init ModuleInit(void) {
 		printk("Can not allocate GPIO 13\n");
 		goto Gpio12Error;
 	}
+	printk("Requesting GPIO 13 success!\n");
 
 	/* Set GPIO 13 direction */
 	if(gpio_direction_output(13, 0)) {
@@ -138,11 +143,15 @@ static int __init ModuleInit(void) {
 		goto Gpio13Error;
 	}
 
+	printk("All GPIO set, configuring pwm0\n");
 	pwm_config(pwm0, pwm_on_time, 1000000000);
+	printk("Enabling pwm0\n");
 	pwm_enable(pwm0);
+	printk("pmw0 set, setting GPIO\n");
 	gpio_set_value(12, 1);
 	gpio_set_value(13, 1);
-
+	printk("Module_init successfully returns");
+	
 	return 0;
 
 Gpio13Error:

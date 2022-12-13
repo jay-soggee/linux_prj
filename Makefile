@@ -1,4 +1,4 @@
-obj-m += driver_buzzer.o
+obj-m += driver_buzzr_ex.o
 KDIR = ~/workspace/kernel
 CCC = gcc
 
