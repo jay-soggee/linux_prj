@@ -4,7 +4,6 @@
 #include <linux/cdev.h>
 #include <linux/uaccess.h>
 #include <linux/pwm.h>
-#include <linux/gpio.h>
 #include <linux/jiffies.h>
 #include <linux/timer.h>
 
@@ -12,8 +11,8 @@
 
 /* Meta Information */
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Johannes 4 GNU/Linux");
-MODULE_DESCRIPTION("A simple driver to access the Hardware PWM IP");
+MODULE_AUTHOR("Emb. Sys. prj 4 GNU/Linux");
+MODULE_DESCRIPTION("Driver to play the scale");
 
 /* Variables for device and device class */
 static dev_t my_device_nr;
@@ -39,11 +38,11 @@ unsigned long note_durations[5][7] = {
     { 2, 2, 2, 2, 2, 2, }
 };
 unsigned long note_scales[5][7] = {
-    { 6811989, NOTE_BREAK, 6811989, NOTE_BREAK, 4545454, NOTE_BREAK },  // cham, cham, cham!
-    { 6428243, NOTE_BREAK, 5102101, NOTE_BREAK, 4290337, NOTE_BREAK },  // win!
-    { 6428243, NOTE_BREAK, 6428243, NOTE_BREAK },                       // lose...
-    { 6428243, 4815742, 3822255, 6428243, 4815742, NOTE_BREAK },        // victory!
-    { 3822255, 4545454, 5726914, 3822255, 4545454, 5726914, NOTE_BREAK }// mission failed...
+    { 3405995, NOTE_BREAK, 3405995, NOTE_BREAK, 2272727, NOTE_BREAK },  // cham, cham, cham!
+    { 3214122, NOTE_BREAK, 2551051, NOTE_BREAK, 2145168, NOTE_BREAK },  // win!
+    { 3214122, NOTE_BREAK, 3214122, NOTE_BREAK },                       // lose...
+    { 3214122, 2407871, 1911127, 2407871, 3214122, NOTE_BREAK },        // victory!
+    { 1911127, 2272727, 2863457, 1911127, 2272727, 2863457, NOTE_BREAK }// mission failed...
 };
 unsigned long* now_playing_duration = NULL, * now_playing_scale = NULL;
 void genNotes(void) {
@@ -201,26 +200,12 @@ static int __init ModuleInit(void) {
         goto AddError;
     }
 
-    // /* GPIO 13 init */
-	// if(gpio_request(13, "rpi-gpio-13")) {
-	// 	printk("Can not allocate GPIO 13\n");
-	// 	goto AddError;
-	// }
-
-	// /* Set GPIO 13 direction */
-	// if(gpio_direction_output(13, 0)) {
-	// 	printk("Can not set GPIO 13 to output!\n");
-	// 	goto Gpio13Error;
-	// }
-
-    // gpio_set_value(13, 1);
-
     genNotes();
 	timer_setup(&my_timer, play_next_node, 0);
 
     return 0;
-// Gpio4Error:
-//     gpio_free(13);
+    
+
 AddError:
     device_destroy(my_class, my_device_nr);
 FileError:
