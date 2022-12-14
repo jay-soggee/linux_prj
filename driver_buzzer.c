@@ -35,14 +35,14 @@ unsigned long note_durations[5][7] = {
     { 1, 1, 1, 1, 1, },
     { 1, 1, 6, },
     { 2, 2, 2, 2, 4, },
-    { 2, 2, 2, 2, 2, 2, }
+    { 4, 4, 4, 4, 4, 4, }
 };
 unsigned long note_scales[5][7] = {
-    { 3405995, NOTE_BREAK, 3405995, NOTE_BREAK, 2272727, NOTE_BREAK },  // cham, cham, cham!
-    { 3214122, NOTE_BREAK, 2551051, NOTE_BREAK, 2145168, NOTE_BREAK },  // win!
-    { 3214122, NOTE_BREAK, 3214122, NOTE_BREAK },                       // lose...
-    { 3214122, 2407871, 1911127, 2407871, 3214122, NOTE_BREAK },        // victory!
-    { 1911127, 2272727, 2863457, 1911127, 2272727, 2863457, NOTE_BREAK }// mission failed...
+    { 6811989, NOTE_BREAK, 6811989, NOTE_BREAK, 4545454, NOTE_BREAK },  // cham, cham, cham!
+    { 6428243, NOTE_BREAK, 5102101, NOTE_BREAK, 4290337, NOTE_BREAK },  // win!
+    { 6428243, NOTE_BREAK, 6428243, NOTE_BREAK },                       // lose...
+    { 6428243, 4815742, 3822255, 6428243, 4815742, NOTE_BREAK },        // victory!
+    { 3822255, 4545454, 5726914, 3822255, 4545454, 5726914, NOTE_BREAK }// mission failed...
 };
 unsigned long* now_playing_duration = NULL, * now_playing_scale = NULL;
 void genNotes(void) {
@@ -97,32 +97,32 @@ static ssize_t driver_write(struct file *File, const char *user_buffer, size_t c
     /* Set PWM on time */
     switch (value) {
         case 'a':
-            printk("buzzer driver : song a\n");
+            printk("my_buzzer_driver : playing song a\n");
             now_playing_duration = note_durations[0];
             now_playing_scale = note_scales[0];
             break;
         case 'b':
-            printk("buzzer driver : song b\n");
+            printk("my_buzzer_driver : playing song b\n");
             now_playing_duration = note_durations[1];
             now_playing_scale = note_scales[1];
             break;
         case 'c':
-            printk("buzzer driver : song c\n");
+            printk("my_buzzer_driver : playing song c\n");
             now_playing_duration = note_durations[2];
             now_playing_scale = note_scales[2];
             break;
         case 'd':
-            printk("buzzer driver : song d\n");
+            printk("my_buzzer_driver : playing song d\n");
             now_playing_duration = note_durations[3];
             now_playing_scale = note_scales[3];
             break;
         case 'e':
-            printk("buzzer driver : song e\n");
+            printk("my_buzzer_driver : playing song e\n");
             now_playing_duration = note_durations[4];
             now_playing_scale = note_scales[4];
             break;
         default:
-            printk("buzzer driver : Invalid Value\n");
+            printk("my_buzzer_driver : Invalid Value\n");
             break;
     }
 
@@ -140,7 +140,7 @@ static ssize_t driver_write(struct file *File, const char *user_buffer, size_t c
  * @brief This function is called, when the device file is opened
  */
 static int driver_open(struct inode *device_file, struct file *instance) {
-    printk("dev_nr - open was called!\n");
+    printk("my_buzzer_driver : open was called!\n");
     return 0;
 }
 
@@ -148,7 +148,7 @@ static int driver_open(struct inode *device_file, struct file *instance) {
  * @brief This function is called, when the device file is opened
  */
 static int driver_close(struct inode *device_file, struct file *instance) {
-    printk("dev_nr - close was called!\n");
+    printk("my_buzzer_driver : close was called!\n");
     return 0;
 }
 
@@ -170,7 +170,7 @@ static int __init ModuleInit(void) {
         printk("Device Nr. could not be allocated!\n");
         return -1;
     }
-    printk("read_write - Device Nr. Major: %d, Minor: %d was registered!\n", my_device_nr >> 20, my_device_nr && 0xfffff);
+    printk("my_buzzer_driver : Device Nr. Major: %d, Minor: %d was registered!\n", my_device_nr >> 20, my_device_nr && 0xfffff);
 
     /* Create device class */
     if((my_class = class_create(THIS_MODULE, DRIVER_CLASS)) == NULL) {
@@ -194,18 +194,17 @@ static int __init ModuleInit(void) {
     }
 
     ////////////// initialize pwm 1 //////////////
-    pwm1 = pwm_request(0, "my-pwm");
+    pwm1 = pwm_request(1, "my-pwm");
     if(pwm1 == NULL) {
         printk("Could not get PWM1!\n");
         goto AddError;
     }
-
+    
     genNotes();
 	timer_setup(&my_timer, play_next_node, 0);
 
     return 0;
     
-
 AddError:
     device_destroy(my_class, my_device_nr);
 FileError:
@@ -227,7 +226,7 @@ static void __exit ModuleExit(void) {
     device_destroy(my_class, my_device_nr);
     class_destroy(my_class);
     unregister_chrdev_region(my_device_nr, 1);
-    printk("Goodbye, Kernel\n");
+    printk("my_buzzer_driver : Goodbye, Kernel\n");
 }
 
 module_init(ModuleInit);
