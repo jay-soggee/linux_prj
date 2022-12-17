@@ -91,7 +91,7 @@ void buttonUpdate() {
     char            buff;
     static char     last_button_state = '0';
     static char     curr_button_state = '0';
-    static Pitime   last_pushed = 0;
+    static Pitime   last_pushed = {0};
 
     read(dev_gpio, &buff, 1); // read pin 6
 
