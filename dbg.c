@@ -212,7 +212,7 @@ int main(void) {
             
 
 #ifdef DEBUG
-            if (current == 4) {printf("Stage 4\n"); current++;}
+            if (current == 4) {printf("Stage 4\n"); current = 1;}
 #endif  
             if (stage_result == 1) {  // win (user side)
                 score[RASPI]--;
