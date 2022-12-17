@@ -107,6 +107,5 @@ int main(void) {
 
     closeAllDev();
     return 0;
-Fatal:
-    return -1;
+    
 }
