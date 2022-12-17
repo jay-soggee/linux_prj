@@ -1,8 +1,9 @@
 obj-m += driver_buzzer.o
+obj-m += driver_gpio.o
 KDIR = ~/workspace/kernel
 CCC = gcc
 
-RESULT = use_buzzer
+RESULT = dbg
 SRC = $(RESULT).c
 
 all :

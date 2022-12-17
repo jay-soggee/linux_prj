@@ -4,6 +4,9 @@
 #include <fcntl.h>
 #include <linux/jiffies.h>
 
+#define DEBUG
+
+typedef unsigned long Pitime
 #define NOW     jiffies
 
 #define DRAW    2
@@ -13,6 +16,7 @@
 #define D1 0x01
 #define D4 0x08
 
+
 char seg_num[10] = {0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xd8, 0x80, 0x90};
 char seg_dnum[10] = {0x40, 0x79, 0x24, 0x30, 0x19, 0x12, 0x02, 0x58, 0x00, 0x10};
 
@@ -21,9 +25,6 @@ int dev_bzzr;
 int dev_gpio;
 int dev_fnd;
 
-/// @brief open character device
-/// @param dir directory - /dev/my_device_driver
-/// @return dev id.
 int OpenCharDev(const char* dir) {
     int tmp = open(dir, O_RDWR);
     if (tmp < 0) {
@@ -33,13 +34,33 @@ int OpenCharDev(const char* dir) {
     return tmp;
 }
 
-char buttonUpdate(int dev) {
-    char buff;
 
-    read(dev, &buff, 1); // read pin 6
+int toggle_button_state = 0;
 
-    return buff;
+void buttonUpdate() {
+    char            buff;
+    static char     last_button_state = '0';
+    static char     curr_button_state = '0';
+    static Pitime   last_pushed = 0;
+
+    read(dev_gpio, &buff, 1); // read pin 6
+
+    if (buff != last_button_state) // if the button signal detected(pressed or noise),
+        last_pushed = NOW;         
+    else if ((NOW - last_pushed) > msecs_to_jiffies(20)) // count the time a little
+        if (buff != curr_button_state) { // if the button signal is still changed
+            curr_button_state = buff;
+            if (curr_button_state == '1')
+                toggle_button_state = !toggle_button_state;
+        }
+    last_button_state = buff; // last_button_state will follow the signal(pressed or noise).
 }
+
+
+void playBuzzer(char song) {
+    write(dev_bzzr, &song, 1);
+}
+
 
 int FND(int dev, int* score) {
     unsigned short data[2];
@@ -58,36 +79,33 @@ int FND(int dev, int* score) {
 
 int main(void) {
 
-    int dev_svmt = OpenCharDev("/dev/my_motor_driver");
-    int dev_bzzr = OpenCharDev("/dev/my_buzzer_driver");
-    int dev_gpio = OpenCharDev("/dev/my_gpio_driver");
-    int dev_fnd  = OpenCharDev("/dev/my_fnd_driver");
+    //dev_svmt = OpenCharDev("/dev/my_motor_driver");
+    dev_bzzr = OpenCharDev("/dev/my_buzzer_driver");
+    //dev_gpio = OpenCharDev("/dev/my_gpio_driver");
+    //dev_fnd  = OpenCharDev("/dev/my_fnd_driver");
     printf("main : Opening char devs success...!!!\n");
 
-    int score[2] = { 0, 0 };
 
-    Motor(0);
-
-    // 버튼 눌리기까지 기다리기
-    char toggle_button_state = 0;
-    do {/*버튼상태 업데이트*/toggle_button_state = buttonUpdate(dev_gpio, toggle_button_state);} 
+    // wait for the start button pressed (behave as toggle)
+    do {buttonUpdate()} 
     while (!toggle_button_state);
 
-    //기준시간 업데이트
-    u32 time_ref = NOW;
-    //2초 기다리고 시작하자
-    while((time_ref + msecs_to_jiffies(2000)) > NOW);
+    int score[2] = { 0, 0 };
+    Motor(0);
+
+    // game started. wait a sec...
+    Pitime time_ref = NOW;
+    while ((time_ref + msecs_to_jiffies(2000)) > NOW);
     
-    //기준시간 다시 업데이트
     time_ref = NOW;
-    while(toggle_button_state){ //버튼이 다시 눌릴때까지
+    while (toggle_button_state){
         // Face Detecting...
 
         // FND ON
         FND(dev_fnd, score);
                 
         /*버튼상태 업데이트*/
-        toggle_button_state = buttonUpdate(dev_gpio);
+        toggle_button_state = buttonUpdate();
 
         if(/*기준부터 0.7초 전까지는...*/){
             /* 참참참 부저 울리기*/
