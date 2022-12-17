@@ -2,12 +2,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <linux/jiffies.h>
+#include <time.h> // need -lrt option. means to use the real-time library
 
 #define DEBUG
 
-typedef unsigned long Pitime
-#define NOW     jiffies
+typedef long int Pitime
+struct timespec gettime_now;
+// get time in nanosec.
+inline Pitime NOW_ns() {
+    clock_gettime(CLOCK_REALTIME, &gettime_now);
+    return gettime_now.tv_nsec;
+}
 
 #define DRAW    2
 #define WIN     1
@@ -46,8 +51,8 @@ void buttonUpdate() {
     read(dev_gpio, &buff, 1); // read pin 6
 
     if (buff != last_button_state) // if the button signal detected(pressed or noise),
-        last_pushed = NOW;         
-    else if ((NOW - last_pushed) > msecs_to_jiffies(20)) // count the time a little
+        last_pushed = NOW_ns();         
+    else if ((NOW_ns() - last_pushed) > 20000) // count the time a little
         if (buff != curr_button_state) { // if the button signal is still changed
             curr_button_state = buff;
             if (curr_button_state == '1')
@@ -94,10 +99,10 @@ int main(void) {
     Motor(0);
 
     // game started. wait a sec...
-    Pitime time_ref = NOW;
-    while ((time_ref + msecs_to_jiffies(2000)) > NOW);
+    Pitime time_ref = NOW_ns();
+    while ((time_ref + msecs_to_jiffies(2000)) > NOW_ns());
     
-    time_ref = NOW;
+    time_ref = NOW_ns();
     while (toggle_button_state){
         // Face Detecting...
 
@@ -140,7 +145,7 @@ int main(void) {
             //이 else문은 스테이지가 끝나고 한번만 실행됨
 
             if (--stage_count) {//게임이 안끝났으면
-                time_ref = NOW; //기준시간 다시 업데이트
+                time_ref = NOW_ns(); //기준시간 다시 업데이트
                 /*스테이지 결과를 스코어에 반영하기*/ 
 
             } else {   //게임이 끝났으면

@@ -2,12 +2,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <linux/jiffies.h>
+#include <time.h>
 
 #define DEBUG
 
-typedef unsigned long Pitime
-#define NOW     jiffies
+typedef long int Pitime
+struct timespec gettime_now;
+// get time in nanosec.
+inline Pitime NOW_ns() {
+    clock_gettime(CLOCK_REALTIME, &gettime_now);
+    return gettime_now.tv_nsec;
+}
 
 #define DRAW    2
 #define WIN     1
@@ -39,8 +44,8 @@ void buttonUpdate() {
     read(dev_gpio, &buff, 1); // read pin 6
 
     if (buff != last_button_state) // if the button signal detected(pressed or noise),
-        last_pushed = NOW;         
-    else if ((NOW - last_pushed) > msecs_to_jiffies(20)) // count the time a little
+        last_pushed = NOW_ns();         
+    else if ((NOW_ns() - last_pushed) > msecs_to_jiffies(20)) // count the time a little
         if (buff != curr_button_state) { // if the button signal is still changed
             curr_button_state = buff;
             if (curr_button_state == '1')
