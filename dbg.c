@@ -112,7 +112,7 @@ void playBuzzer(char song) {
 
 const char seg_num[10] = {0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xd8, 0x80, 0x90};
 const char seg_dot = 0x7f;
-int FND(int dev, int* score) {
+int FND(int* score) {
     unsigned short data[3];
     static int n = 0;
 
@@ -120,7 +120,7 @@ int FND(int dev, int* score) {
     data[2] = (seg_dot           << 4) | D3;
     data[1] = (seg_num[score[1]] << 4) | D4;
 
-    write(dev, &data[n], 2);
+    write(dev_fnd, &data[n], 2);
     n++;
     n = (n + 1) % 2;
 }
@@ -131,8 +131,10 @@ int main(void) {
     int opn_err = openAllDev();
     if (opn_err & ERR_OPN_GPIO) goto CDevOpenFatal;
 
+    int score[2] = { 0, 0 };
+
     // wait for the start button pressed (behave as toggle)
-    do {buttonUpdate();} 
+    do {buttonUpdate(); FND(score);} 
     while (!toggle_button_state);
 
     playBuzzer('a');

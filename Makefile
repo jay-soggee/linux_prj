@@ -1,5 +1,6 @@
 obj-m += driver_buzzer.o
 obj-m += driver_gpio.o
+obj-m += driver_fnd.o
 KDIR = ~/workspace/kernel
 CCC = gcc
 
