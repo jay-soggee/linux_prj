@@ -5,6 +5,7 @@
 #include <time.h> // need -lrt option. means to use the real-time library
 
 #define DEBUG_R
+#define DEBUG
 
 #define DEATH_MATCH  1  // do until someone is defeated
 #define SERVIVAL     0  // do just three rounds
@@ -146,7 +147,7 @@ int main(void) {
         game_mode = DEATH_MATCH;
     }
 
-
+    printf("game starts, mode = %s\n", game_mode == SERVIVAL ? "SERVIVAL" : "DEATH MATCH");
     // initialize variables for loop
     int score[2] = { 3, 3 };
     int stage_count = (game_mode == SERVIVAL) ? 3 : 999999999;
@@ -162,19 +163,23 @@ int main(void) {
 
         if(!isTimePassed_us(&time_ref, 700000)){ // ~0.7s
 
+            printf("stage 1\n");
             playBuzzer('a'); //cham cham cham! (only once)
 
         } else if (!isTimePassed_us(&time_ref, 1400000)) { // ~1.4s
 
+            printf("stage 2\n");
             rpi_dir = myRand(); //is current system clock count odd? or even?
 
         } else if (!isTimePassed_us(&time_ref, 3100000)) { // ~3.1s
-                
+
+            printf("stage 3\n");
             if (stage_result == 1) playBuzzer('b');  // win (user side)
             else playBuzzer('c'); //stage_result == 0   lose
 
         } else { // after 3.1s
             
+            printf("stage 4\n");
             if (stage_result == 1) {  // win (user side)
                 score[RASPI]--;
                 writeLED(WIN);
