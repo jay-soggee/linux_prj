@@ -25,6 +25,7 @@ Pitime NOW() {
 int isTimePassed_s(Pitime* ref, int time_sec) {
     int pass_sec = ref->tv_sec + time_sec;
     clock_gettime(CLOCK_REALTIME, &gettime_now);
+    printf("now : %d\n", gettime_now.tv_sec);
     return (gettime_now.tv_sec < pass_sec) ? 0 : 1;
 }
 
@@ -163,23 +164,23 @@ int main(void) {
 
         if(!isTimePassed_s(&time_ref, 1)){ // ~1s
 
-            printf("stage 1\n");
+            //printf("stage 1\n");
             playBuzzer('a'); //cham cham cham! (only once)
 
         } else if (!isTimePassed_s(&time_ref, 2)) { // ~2s
 
-            printf("stage 2\n");
+            //printf("stage 2\n");
             rpi_dir = myRand(); //is current system clock count odd? or even?
 
         } else if (!isTimePassed_s(&time_ref, 3)) { // ~3s
 
-            printf("stage 3\n");
+            //printf("stage 3\n");
             if (stage_result == 1) playBuzzer('b');  // win (user side)
             else playBuzzer('c'); //stage_result == 0   lose
 
         } else { // after 3s
             
-            printf("stage 4\n");
+            //printf("stage 4\n");
             if (stage_result == 1) {  // win (user side)
                 score[RASPI]--;
                 writeLED(WIN);
@@ -202,7 +203,7 @@ int main(void) {
         }
     }
     time_ref = NOW();
-    while (!isTimePassed_s(&time_ref, 2000000));
+    while (!isTimePassed_s(&time_ref, 2));
 
 CDevOpenFatal:
     closeAllDev();
