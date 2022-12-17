@@ -6,13 +6,22 @@
 
 #define DEBUG
 
-typedef long int Pitime;
-struct timespec gettime_now;
-// get time in nanosec.
+typedef struct timespec Pitime;
+Pitime gettime_now;
 Pitime NOW() {
     clock_gettime(CLOCK_REALTIME, &gettime_now);
-    return gettime_now.tv_nsec;
+    return gettime_now;
 }
+int isTimePassed_us(Pitime ref, int time_us) {
+    // 1s = 1,000,000us, 1us = 1,000ns
+    int time_sec  = time_us / 1000000;
+    int time_nsec = (time_us % 1000000) * 1000;
+    int passed_sec = ref.tv_sec + time_sec;
+    int passed_nsec = ref.tv_nsec + time_nsec;
+    clock_gettime(CLOCK_REALTIME, &gettime_now);
+    return (gettime_now.tv_sec < passed_sec) ? 0 : (gettime_now.tv_nsec < passed_nsec) ? 0 : 1;
+}
+
 
 #define DRAW    2
 #define WIN     1
@@ -117,6 +126,7 @@ int main(void) {
     while (isTimePassed_us(time_ref, 2000000));
 
     
+CDevOpenFatal:
     closeAllDev();
     return 0;
 
