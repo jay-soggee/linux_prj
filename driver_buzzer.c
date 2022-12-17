@@ -21,7 +21,7 @@ static struct cdev my_device;
 static struct timer_list my_timer;
 
 #define DRIVER_NAME "my_buzzer_driver"
-#define DRIVER_CLASS "MyModuleClass"
+#define DRIVER_CLASS "MyBuzzerClass"
 
 /* Variables */
 struct pwm_device *pwm1 = NULL; 
@@ -163,7 +163,7 @@ static struct file_operations fops = {
  * @brief This function is called, when the module is loaded into the kernel
  */
 static int __init ModuleInit(void) {
-    printk("Hello, Kernel!\n");
+    printk("my_buzzer_driver : Hello, Kernel!\n");
 
     /* Allocate a device nr */
     if( alloc_chrdev_region(&my_device_nr, 0, 1, DRIVER_NAME) < 0) {
@@ -174,13 +174,13 @@ static int __init ModuleInit(void) {
 
     /* Create device class */
     if((my_class = class_create(THIS_MODULE, DRIVER_CLASS)) == NULL) {
-        printk("Device class can not be created!\n");
+        printk("my_buzzer_driver : Device class can not be created!\n");
         goto ClassError;
     }
 
     /* create device file */
     if(device_create(my_class, NULL, my_device_nr, NULL, DRIVER_NAME) == NULL) {
-        printk("Can not create device file!\n");
+        printk("my_buzzer_driver : Can not create device file!\n");
         goto FileError;
     }
 
@@ -189,14 +189,14 @@ static int __init ModuleInit(void) {
 
     /* Regisering device to kernel */
     if(cdev_add(&my_device, my_device_nr, 1) == -1) {
-        printk("Registering of device to kernel failed!\n");
+        printk("my_buzzer_driver : Registering of device to kernel failed!\n");
         goto AddError;
     }
 
     ////////////// initialize pwm 1 //////////////
     pwm1 = pwm_request(1, "my-pwm");
     if(pwm1 == NULL) {
-        printk("Could not get PWM1!\n");
+        printk("my_buzzer_driver : Could not get PWM1!\n");
         goto AddError;
     }
     
