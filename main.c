@@ -23,7 +23,7 @@ Pitime NOW() {
     clock_gettime(CLOCK_REALTIME, &gettime_now);
     return gettime_now;
 }
-int isTimePassed_us(Pitime* ref, int time_us) {
+int isTimePassed_s(Pitime* ref, int time_us) {
     // 1s = 1,000,000us, 1us = 1,000ns
     int time_sec  = time_us / 1000000;
     int time_nsec = (time_us - time_sec) * 1000;
@@ -82,7 +82,7 @@ void buttonUpdate() {
 
     if (buff != last_button_state) // if the button signal detected(pressed or noise),
         last_pushed = NOW();         
-    else if (!isTimePassed_us(&last_pushed, debounce_time_us)) // count the time a little
+    else if (!isTimePassed_s(&last_pushed, debounce_time_us)) // count the time a little
         if (buff != curr_button_state) { // if the button signal is still changed
             curr_button_state = buff;
             if (curr_button_state == '1')
@@ -156,7 +156,7 @@ int main(void) {
     // game started. wait 2sec...
     Pitime time_ref = NOW();
     int game_mode = SERVIVAL;
-    while (!isTimePassed_us(&time_ref, 2000000)) buttonUpdate();
+    while (!isTimePassed_s(&time_ref, 2000000)) buttonUpdate();
     if (toggle_button_state == 0) {
         toggle_button_state = 1;
         game_mode = DEATH_MATCH;
@@ -177,23 +177,23 @@ int main(void) {
         FND(score);
         buttonUpdate();
 
-        if(!isTimePassed_us(&time_ref, 700000)){ // ~0.7s
+        if(!isTimePassed_s(&time_ref, 700000)){ // ~0.7s
 
             playBuzzer('a'); //cham cham cham! (only once)
                         
             Motor(0); //TODO: motor
 
             usr_dir0 = //FIXME: 이용자 얼굴각도 읽어오기
+            rpi_dir = myRand();
 
-        } else if (!isTimePassed_us(&time_ref, 1400000)) { // ~1.4s
+        } else if (!isTimePassed_s(&time_ref, 1400000)) { // ~1.4s
 
             
-            rpi_dir = myRand(); //is current system clock count odd? or even?
             Motor(rpi_dir); //TODO: motor
 
             usr_dir1 = //FIXME: 이용자 얼굴각도 읽어오기
 
-        } else if (!isTimePassed_us(&time_ref, 3100000)) { // ~3.1s
+        } else if (!isTimePassed_s(&time_ref, 3100000)) { // ~3.1s
             
             usr_dir = (usr_dir0 - usr_dir1); //FIXME: 이용자 결정 판별하기
             stage_result = Compare(rpi_dir, usr_dir);
@@ -225,7 +225,7 @@ int main(void) {
         }
     }
     time_ref = NOW();
-    while (!isTimePassed_us(&time_ref, 2000000));
+    while (!isTimePassed_s(&time_ref, 2000000));
 
 CDevOpenFatal:
     closeAllDev();

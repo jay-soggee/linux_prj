@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <time.h> // need -lrt option. means to use the real-time library
 
-#define DEBUG_R
+//#define DEBUG_R
 #define DEBUG
 
 #define DEATH_MATCH  1  // do until someone is defeated
@@ -22,25 +22,17 @@ Pitime NOW() {
     clock_gettime(CLOCK_REALTIME, &gettime_now);
     return gettime_now;
 }
-int isTimePassed_us(Pitime* ref, int time_us) {
-    // 1s = 1,000,000us, 1us = 1,000ns
-    int time_sec  = time_us / 1000000;
-    int time_nsec = (time_us - time_sec) * 1000;
-    int passed_sec = ref->tv_sec + time_sec;
-    int passed_nsec = ref->tv_nsec + time_nsec;
-    if (passed_nsec > 1000000000) { // control overflow
-        passed_sec++;
-        passed_nsec -= 1000000000;
-    }
+int isTimePassed_s(Pitime* ref, int time_sec) {
+    int pass_sec = ref->tv_sec + time_sec;
     clock_gettime(CLOCK_REALTIME, &gettime_now);
-    return (gettime_now.tv_sec < passed_sec) ? 0 : (gettime_now.tv_nsec < passed_nsec) ? 0 : 1;
+    return (gettime_now.tv_sec < pass_sec) ? 0 : 1;
 }
 
 int myRand() {
     Pitime rand_seed;
     rand_seed = NOW();
 #ifdef DEBUG_R
-    printf("main : rand val : %d", (rand_seed.tv_nsec & 1));
+    printf("main : rand val : %d\n", (rand_seed.tv_nsec & 1));
 #endif
     return rand_seed.tv_nsec & 1;
 }
@@ -71,21 +63,25 @@ int toggle_button_state = 0;
 void buttonUpdate() {
     const  int      debounce_time_us = 40;
            char     buff;
-    static char     last_button_state = '0';
-    static char     curr_button_state = '0';
+    static char     tmp_button_states[8] = {
+        '0', '0', '0', '0', '0', '0', '0', '0' 
+    };
     static Pitime   last_pushed = {0};
 
     read(dev_gpio, &buff, 1); // read pin 6
 
-    if (buff != last_button_state) // if the button signal detected(pressed or noise),
-        last_pushed = NOW();         
-    else if (!isTimePassed_us(&last_pushed, debounce_time_us)) // count the time a little
-        if (buff != curr_button_state) { // if the button signal is still changed
-            curr_button_state = buff;
-            if (curr_button_state == '1')
-                toggle_button_state = !toggle_button_state;
-        }
-    last_button_state = buff; // last_button_state will follow the signal(pressed or noise).
+    for (int i = 1; i < 8; i++) {
+        tmp_button_states[i] = tmp_button_states[i - 1];
+    }
+    tmp_button_states[0] = buff;
+
+    // noise filtering
+    if (
+        tmp_button_states[7] == buff &&
+        tmp_button_states[6] == buff &&
+        tmp_button_states[5] == buff &&
+        tmp_button_states[4] == buff
+    ) toggle_button_state = !toggle_button_state;
 }
 
 void writeLED(const int winflag) {
@@ -145,7 +141,7 @@ int main(void) {
     // game started. wait 2sec...
     Pitime time_ref = NOW();
     int game_mode = SERVIVAL;
-    while (!isTimePassed_us(&time_ref, 2000000)) buttonUpdate();
+    while (!isTimePassed_s(&time_ref, 2)) buttonUpdate();
     if (toggle_button_state == 0) {
         toggle_button_state = 1;
         game_mode = DEATH_MATCH;
@@ -165,23 +161,23 @@ int main(void) {
         FND(score);
         buttonUpdate();
 
-        if(!isTimePassed_us(&time_ref, 700000)){ // ~0.7s
+        if(!isTimePassed_s(&time_ref, 1)){ // ~1s
 
             printf("stage 1\n");
             playBuzzer('a'); //cham cham cham! (only once)
 
-        } else if (!isTimePassed_us(&time_ref, 1400000)) { // ~1.4s
+        } else if (!isTimePassed_s(&time_ref, 2)) { // ~2s
 
             printf("stage 2\n");
             rpi_dir = myRand(); //is current system clock count odd? or even?
 
-        } else if (!isTimePassed_us(&time_ref, 3100000)) { // ~3.1s
+        } else if (!isTimePassed_s(&time_ref, 3)) { // ~3s
 
             printf("stage 3\n");
             if (stage_result == 1) playBuzzer('b');  // win (user side)
             else playBuzzer('c'); //stage_result == 0   lose
 
-        } else { // after 3.1s
+        } else { // after 3s
             
             printf("stage 4\n");
             if (stage_result == 1) {  // win (user side)
@@ -206,7 +202,7 @@ int main(void) {
         }
     }
     time_ref = NOW();
-    while (!isTimePassed_us(&time_ref, 2000000));
+    while (!isTimePassed_s(&time_ref, 2000000));
 
 CDevOpenFatal:
     closeAllDev();
