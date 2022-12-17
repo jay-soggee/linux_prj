@@ -75,25 +75,21 @@ int toggle_button_state = 0;
 void buttonUpdate() {
     const  int      debounce_time_us = 40;
            char     buff;
-    static char     tmp_button_states[8] = {
-        '0', '0', '0', '0', '0', '0', '0', '0' 
-    };
+    static char     last_button_state = '0';
+    static char     curr_button_state = '0';
     static Pitime   last_pushed = {0};
 
     read(dev_gpio, &buff, 1); // read pin 6
 
-    for (int i = 1; i < 8; i++) {
-        tmp_button_states[i] = tmp_button_states[i - 1];
-    }
-    tmp_button_states[0] = buff;
-
-    // noise filtering
-    if (
-        tmp_button_states[7] == buff &&
-        tmp_button_states[6] == buff &&
-        tmp_button_states[5] == buff &&
-        tmp_button_states[4] == buff
-    ) toggle_button_state = !toggle_button_state;
+    if (buff != last_button_state) // if the button signal detected(pressed or noise),
+        last_pushed = NOW();         
+    else if (!isTimePassed_us(&last_pushed, debounce_time_us)) // count the time a little
+        if (buff != curr_button_state) { // if the button signal is still changed
+            curr_button_state = buff;
+            if (curr_button_state == '1')
+                toggle_button_state = !toggle_button_state;
+        }
+    last_button_state = buff; // last_button_state will follow the signal(pressed or noise).
 }
 
 void writeLED(const int winflag) {
