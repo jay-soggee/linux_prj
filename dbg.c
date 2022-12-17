@@ -12,6 +12,7 @@ Pitime NOW() {
     clock_gettime(CLOCK_REALTIME, &gettime_now);
     return gettime_now;
 }
+// usage : while(!isTimePassed_us(reference_time, time_to_wait));
 int isTimePassed_us(Pitime ref, int time_us) {
     // 1s = 1,000,000us, 1us = 1,000ns
     int time_sec  = time_us / 1000000;
@@ -118,12 +119,12 @@ int main(void) {
 
     // game started. wait a sec...
     Pitime time_ref = NOW();
-    while (isTimePassed_us(time_ref, 2000000));
+    while (!isTimePassed_us(time_ref, 2000000));
 
     playBuzzer('b');
 
     time_ref = NOW();
-    while (isTimePassed_us(time_ref, 2000000));
+    while (!isTimePassed_us(time_ref, 2000000));
 
     
 CDevOpenFatal:

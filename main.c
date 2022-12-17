@@ -97,7 +97,7 @@ void buttonUpdate() {
 
     if (buff != last_button_state) // if the button signal detected(pressed or noise),
         last_pushed = NOW();         
-    else if ((NOW() - last_pushed) > 20000L) // count the time a little
+    else if (isTimePassed_us(last_pushed, 20)) // count the time a little
         if (buff != curr_button_state) { // if the button signal is still changed
             curr_button_state = buff;
             if (curr_button_state == '1')
