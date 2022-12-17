@@ -108,6 +108,9 @@ int main(void) {
 
     playBuzzer('b');
 
+    time_ref = NOW_ns();
+    while ((time_ref + 2000000000) > NOW_ns());
+    
     closeAllDev();
     return 0;
 
