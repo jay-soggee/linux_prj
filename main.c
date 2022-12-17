@@ -4,7 +4,16 @@
 #include <fcntl.h>
 #include <time.h> // need -lrt option. means to use the real-time library
 
-#define DEBUG
+#define DEBUG_R
+
+#define DEATH_MATCH  1  // do until someone is defeated
+#define SERVIVAL     0  // do just three rounds
+#define USER         0  // score index
+#define RASPI        1
+#define DRAW    2
+#define WIN     1
+#define LOSE    0
+
 
 typedef struct timespec Pitime;
 Pitime gettime_now;
@@ -12,21 +21,24 @@ Pitime NOW() {
     clock_gettime(CLOCK_REALTIME, &gettime_now);
     return gettime_now;
 }
-int isTimePassed_us(Pitime ref, int time_us) {
+int isTimePassed_us(Pitime* ref, int time_us) {
     // 1s = 1,000,000us, 1us = 1,000ns
     int time_sec  = time_us / 1000000;
     int time_nsec = (time_us % 1000000) * 1000;
-    int passed_sec = ref.tv_sec + time_sec;
-    int passed_nsec = ref.tv_nsec + time_nsec;
+    int passed_sec = ref->tv_sec + time_sec;
+    int passed_nsec = ref->tv_nsec + time_nsec;
     clock_gettime(CLOCK_REALTIME, &gettime_now);
     return (gettime_now.tv_sec < passed_sec) ? 0 : (gettime_now.tv_nsec < passed_nsec) ? 0 : 1;
 }
 
-
-#define DRAW    2
-#define WIN     1
-#define LOSE    0
-
+int myRand() {
+    Pitime rand_seed;
+    rand_seed = NOW();
+#ifdef DEBUG_R
+    printf("main : rand val : %d", (rand_seed.tv_nsec & 1));
+#endif
+    return rand_seed.tv_nsec & 1;
+}
 
 
 const char* cdev_dirs[4] = {
@@ -52,7 +64,8 @@ int toggle_button_state = 0;
 
 // update toggle button signal w/ signal debouncing
 void buttonUpdate() {
-    char            buff;
+    const  int      debounce_time_us = 40;
+           char     buff;
     static char     last_button_state = '0';
     static char     curr_button_state = '0';
     static Pitime   last_pushed = {0};
@@ -61,7 +74,7 @@ void buttonUpdate() {
 
     if (buff != last_button_state) // if the button signal detected(pressed or noise),
         last_pushed = NOW();         
-    else if (!isTimePassed_us(last_pushed, 20)) // count the time a little
+    else if (!isTimePassed_us(&last_pushed, debounce_time_us)) // count the time a little
         if (buff != curr_button_state) { // if the button signal is still changed
             curr_button_state = buff;
             if (curr_button_state == '1')
@@ -70,9 +83,21 @@ void buttonUpdate() {
     last_button_state = buff; // last_button_state will follow the signal(pressed or noise).
 }
 
+void writeLED(const int winflag) {
+    char buff = '0';
+    if (winflag)
+        write(dev_gpio, &(++buff), 1);   // blue LED
+    else 
+        write(dev_gpio, &(buff), 1);     // red LED
+}
+
 
 void playBuzzer(char song) {
-    write(dev_bzzr, &song, 1);
+    static char prev_song = 'i';
+    if (prev_song != song) {
+        write(dev_bzzr, &song, 1);
+        prev_song = song;
+    }
 }
 
 
@@ -112,84 +137,77 @@ int main(void) {
 
     // game started. wait 2sec...
     Pitime time_ref = NOW();
-    while (!isTimePassed_us(time_ref, 2000000));
-    
-    // initialize variables
-    int score[2] = { 0, 0 };
-    Motor(0);
+    int game_mode = SERVIVAL;
+    while (!isTimePassed_us(&time_ref, 2000000)) buttonUpdate();
+    if (toggle_button_state == 0) {
+        toggle_button_state = 1;
+        game_mode = DEATH_MATCH;
+    }
+
+
+    // initialize variables for loop
+    int score[2] = { 3, 3 };
+    int stage_count = (game_mode == SERVIVAL) ? 3 : 999999999;
+    int stage_result = 1;
+    int rpi_dir, usr_dir, usr_dir0, usr_dir1;
+    Motor(0); //TODO: motor
     time_ref = NOW();
 
-    while (toggle_button_state){
+    while (toggle_button_state) {
         // Face Detecting...
 
         FND(score);
-
-        /*버튼상태 업데이트*/
         buttonUpdate();
 
-        if(/*기준부터 0.7초 전까지는...*/){
-            /* 참참참 부저 울리기*/
-            chamchamcham(); //얘는 한번만 실행함
+        if(!isTimePassed_us(&time_ref, 700000)){ // ~0.7s
+
+            playBuzzer('a'); //cham cham cham! (only once)
                         
-            Motor(0); //얘는 한번만 할 필욘 없는데 계속할 필요는 더더욱 없음
+            Motor(0); //TODO: motor
 
-            user_dir0 = /*이용자 얼굴각도 읽어오기*/;
+            usr_dir0 = //FIXME: 이용자 얼굴각도 읽어오기
 
+        } else if (!isTimePassed_us(&time_ref, 1400000)) { // ~1.4s
 
-            //while문 안에서는 되도록 printf문 금지
-            //printf("Compter : %d \t User : %d \t Result : %d", com_dir, user_dir, result);         
-            //else printf("Can't Detect face...\n");
-
-        } else if (/*그 이후, 기준부터 1.4초 전까지는...*/) {
-
-            com_dir = /*컴퓨터 좌우 방향 선택*/;
-            Motor(com_dir);
-
-            user_dir1 = /*이용자 얼굴각도 읽어오기*/;
-
-        } else if (/*그 이후, 기준부터 3.1초 전까지는...*/) {
             
-            user_dir = user_dir0 - user_dir1;
-            result_stage = Compare(com_dir, user_dir);
+            rpi_dir = myRand(); //is current system clock count odd? or even?
+            Motor(rpi_dir); //TODO: motor
+
+            usr_dir1 = //FIXME: 이용자 얼굴각도 읽어오기
+
+        } else if (!isTimePassed_us(&time_ref, 3100000)) { // ~3.1s
+            
+            usr_dir = (usr_dir0 - usr_dir1); //FIXME: 이용자 결정 판별하기
+            stage_result = Compare(rpi_dir, usr_dir);
                 
-            // 마찬가지로 한번만
-            stageBeep(result_stage); //스테이지 결과 재생(승/패)
+            if (stage_result == 1) playBuzzer('b');  // win (user side)
+            else playBuzzer('c'); //stage_result == 0   lose
 
-        } else { //한 스테이지가 끝나고... 다음스테이지? 아님 끝?
-                
-            //이 else문은 스테이지가 끝나고 한번만 실행됨
+        } else { // after 3.1s
+            
+            if (stage_result == 1) {  // win (user side)
+                score[RASPI]--;
+                writeLED(WIN);
+            }
+            else {                    // lose
+                score[USER]--;
+                writeLED(LOSE);
+            }
 
-            if (--stage_count) {//게임이 안끝났으면
-                time_ref = NOW(); //기준시간 다시 업데이트
-                /*스테이지 결과를 스코어에 반영하기*/ 
+            if (--stage_count && (score[RASPI] && score[USER])) {
+                time_ref = NOW();
+            } else { // if game ends.
+                if (score[USER] >= score[RASPI])
+                    playBuzzer('d'); // user won  this game
+                else
+                    playBuzzer('e'); // user lost this game
 
-            } else {   //게임이 끝났으면
-
-                switch (result) {
-                case WIN:
-                    /* 파란색 LED*/ // usleep(delay_time);?
-                    /* 승리 부저*/
-                    score[0]++;
-                    break;
-                case LOSE:
-                    /* 빨간색 LED*/
-                    /* 패배 부저*/
-                    score[1]++;
-                    break;
-                case DRAW:
-                    /* */
-                    printf("Draw Game\n");
-                default:
-                    break;
-                }
-
+                break; // finish game.
             }
         }
-        
-        /* 초기화 상태로 만들기 -재석: 근데 이렇게하면 모터가 항상 0도가 됨*/ 
-        //Motor(0);
-        //LED(0,0);
     }
+    time_ref = NOW();
+    while (!isTimePassed_us(&time_ref, 2000000));
 
 CDevOpenFatal:
     closeAllDev();
