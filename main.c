@@ -6,7 +6,7 @@
 
 #define DEBUG
 
-typedef long int Pitime
+typedef long int Pitime;
 struct timespec gettime_now;
 // get time in nanosec.
 inline Pitime NOW_ns() {
@@ -34,7 +34,7 @@ int OpenCharDev(const char* dir) {
     int tmp = open(dir, O_RDWR);
     if (tmp < 0) {
         printf("main : Opening %s is not Possible!\n", dir);
-        goto FATAL;
+        goto Fatal;
     }
     return tmp;
 }
@@ -92,7 +92,7 @@ int main(void) {
 
 
     // wait for the start button pressed (behave as toggle)
-    do {buttonUpdate()} 
+    do {buttonUpdate();} 
     while (!toggle_button_state);
 
     int score[2] = { 0, 0 };
@@ -179,6 +179,6 @@ int main(void) {
     close(dev);
 
     return 0;
-FATAL :
+Fatal:
     return -1;
 }
