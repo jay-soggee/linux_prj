@@ -8,7 +8,7 @@
 /* Meta Information */
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Emb. Sys. prj 4 GNU/Linux");
-MODULE_DESCRIPTION("A simple gpio driver for setting a LED and reading a button");
+MODULE_DESCRIPTION("GPIO driver for setting LED and reading a button");
 
 /* Variables for device and device class */
 static dev_t my_device_nr;

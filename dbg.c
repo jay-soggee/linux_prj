@@ -105,6 +105,26 @@ void playBuzzer(char song) {
 }
 
 
+#define D1 0x01
+#define D2 0x02
+#define D3 0x04
+#define D4 0x08
+
+const char seg_num[10] = {0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xd8, 0x80, 0x90};
+const char seg_dot = 0x7f;
+int FND(int dev, int* score) {
+    unsigned short data[3];
+    static int n = 0;
+
+    data[0] = (seg_num[score[0]] << 4) | D1;
+    data[2] = (seg_dot           << 4) | D3;
+    data[1] = (seg_num[score[1]] << 4) | D4;
+
+    write(dev, &data[n], 2);
+    n++;
+    n = (n + 1) % 2;
+}
+
 
 int main(void) {
 

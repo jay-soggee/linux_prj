@@ -27,12 +27,7 @@ int isTimePassed_us(Pitime ref, int time_us) {
 #define WIN     1
 #define LOSE    0
 
-#define D1 0x01
-#define D4 0x08
 
-
-char seg_num[10] = {0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xd8, 0x80, 0x90};
-char seg_dnum[10] = {0x40, 0x79, 0x24, 0x30, 0x19, 0x12, 0x02, 0x58, 0x00, 0x10};
 
 const char* cdev_dirs[4] = {
     "/dev/my_motor_driver",
@@ -49,44 +44,13 @@ int dev_fnd;
 #define ERR_OPN_GPIO    (1 << 2)
 #define ERR_OPN_FND     (1 << 3)
 
-int openAllDev() {
-    int* cdevs[4] = {
-        &dev_svmt,
-        &dev_bzzr,
-        &dev_gpio,
-        &dev_fnd
-    };
-    int err = 0;
-
-    // note : access order - [i] is faster than *
-    for (int i = 0; i < 4; i++) {
-        *cdevs[i] = open(cdev_dirs[i], O_RDWR);
-        if (*cdevs[i] < 0) {
-            printf("main : Opening %s is not Possible!\n", cdev_dirs[i]);
-            err += (1 << i);
-        }
-    }
-
-    return err;
-}
-
-void closeAllDev() {
-    int* cdevs[4] = {
-        &dev_svmt,
-        &dev_bzzr,
-        &dev_gpio,
-        &dev_fnd
-    };
-    for (int i = 0; i < 4; i++) 
-        if (*cdevs[i] > 0)
-            close(*cdevs[i]);
-}
-
-
+int openAllDev();
+void closeAllDev();
 
 
 int toggle_button_state = 0;
 
+// update toggle button signal w/ signal debouncing
 void buttonUpdate() {
     char            buff;
     static char     last_button_state = '0';
@@ -112,12 +76,20 @@ void playBuzzer(char song) {
 }
 
 
-int FND(int dev, int* score) {
-    unsigned short data[2];
-    int n = 0;
+#define D1 0x01
+#define D2 0x02
+#define D3 0x04
+#define D4 0x08
 
-    data[0] = (seg_num[score[0]] << 4) | D1;    // pin2
-    data[1] = (seg_num[score[1]] << 4) | D4;    // pin5
+const char seg_num[10] = {0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xd8, 0x80, 0x90};
+const char seg_dot = 0x7f;
+int FND(int dev, int* score) {
+    unsigned short data[3];
+    static int n = 0;
+
+    data[0] = (seg_num[score[0]] << 4) | D1;
+    data[2] = (seg_dot           << 4) | D3;
+    data[1] = (seg_num[score[1]] << 4) | D4;
 
     write(dev, &data[n], 2);
     n++;
@@ -129,6 +101,7 @@ int FND(int dev, int* score) {
 
 int main(void) {
 
+    // open character devices
     int opn_err = openAllDev();
     if (opn_err & ERR_OPN_GPIO) goto CDevOpenFatal;
     
@@ -137,20 +110,20 @@ int main(void) {
     do {buttonUpdate();} 
     while (!toggle_button_state);
 
-    int score[2] = { 0, 0 };
-    Motor(0);
-
-    // game started. wait a sec...
+    // game started. wait 2sec...
     Pitime time_ref = NOW();
     while (!isTimePassed_us(time_ref, 2000000));
     
+    // initialize variables
+    int score[2] = { 0, 0 };
+    Motor(0);
     time_ref = NOW();
+
     while (toggle_button_state){
         // Face Detecting...
 
-        // FND ON
         FND(dev_fnd, score);
-                
+
         /*버튼상태 업데이트*/
         buttonUpdate();
 
@@ -222,4 +195,44 @@ CDevOpenFatal:
     closeAllDev();
 
     return 0;
+}
+
+
+
+
+
+
+
+
+int openAllDev() {
+    int* cdevs[4] = {
+        &dev_svmt,
+        &dev_bzzr,
+        &dev_gpio,
+        &dev_fnd
+    };
+    int err = 0;
+
+    // note : access order - [i] is faster than *
+    for (int i = 0; i < 4; i++) {
+        *cdevs[i] = open(cdev_dirs[i], O_RDWR);
+        if (*cdevs[i] < 0) {
+            printf("main : Opening %s is not Possible!\n", cdev_dirs[i]);
+            err += (1 << i);
+        }
+    }
+
+    return err;
+}
+
+void closeAllDev() {
+    int* cdevs[4] = {
+        &dev_svmt,
+        &dev_bzzr,
+        &dev_gpio,
+        &dev_fnd
+    };
+    for (int i = 0; i < 4; i++) 
+        if (*cdevs[i] > 0)
+            close(*cdevs[i]);
 }
