@@ -18,18 +18,45 @@ inline Pitime NOW_ns() {
 #define WIN     1
 #define LOSE    0
 
+const char* cdev_dirs[4] = {
+    "/dev/my_motor_driver",
+    "/dev/my_buzzer_driver",
+    "/dev/my_gpio_driver",
+    "/dev/my_fnd_driver"
+};
 int dev_svmt;
 int dev_bzzr;
 int dev_gpio;
 int dev_fnd;
 
-int OpenCharDev(const char* dir) {
-    int tmp = open(dir, O_RDWR);
-    if (tmp < 0) {
-        printf("main : Opening %s is not Possible!\n", dir);
-        goto Fatal;
+int openAllDev() {
+    int* cdevs[4];
+    cdevs[0] = &dev_svmt;
+    cdevs[1] = &dev_bzzr;
+    cdevs[2] = &dev_gpio;
+    cdevs[3] = &dev_fnd;
+    int err = 0;
+
+    for (int i = 0; i < 4; i++) {
+        cdevs[i]* = open(cdev_dirs[i], O_RDWR);
+        if (cdevs[i]* < 0) {
+            printf("main : Opening %s is not Possible!\n", cdev_dirs[i]);
+            err -= 1;
+        }
     }
-    return tmp;
+
+    return err;
+}
+
+void closeAllDev() {
+    int* cdevs[4];
+    cdevs[0] = &dev_svmt;
+    cdevs[1] = &dev_bzzr;
+    cdevs[2] = &dev_gpio;
+    cdevs[3] = &dev_fnd;
+    for (int i = 0; i < 4; i++) 
+        if (cdevs[i]* > 0)
+            close(cdevs[i]*);
 }
 
 
@@ -64,12 +91,7 @@ void playBuzzer(char song) {
 
 int main(void) {
 
-    //dev_svmt = OpenCharDev("/dev/my_motor_driver");
-    dev_bzzr = OpenCharDev("/dev/my_buzzer_driver");
-    dev_gpio = OpenCharDev("/dev/my_gpio_driver");
-    //dev_fnd  = OpenCharDev("/dev/my_fnd_driver");
-    printf("main : Opening char devs success...!!!\n");
-
+    openAllDev();
 
     // wait for the start button pressed (behave as toggle)
     do {buttonUpdate();} 
@@ -83,8 +105,7 @@ int main(void) {
 
     playBuzzer('b');
 
-    close(dev_bzzr);
-    close(dev_gpio);
+    closeAllDev();
     return 0;
 Fatal:
     return -1;

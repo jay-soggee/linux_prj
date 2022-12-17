@@ -27,19 +27,48 @@ inline Pitime NOW_ns() {
 char seg_num[10] = {0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xd8, 0x80, 0x90};
 char seg_dnum[10] = {0x40, 0x79, 0x24, 0x30, 0x19, 0x12, 0x02, 0x58, 0x00, 0x10};
 
+const char* cdev_dirs[4] = {
+    "/dev/my_motor_driver",
+    "/dev/my_buzzer_driver",
+    "/dev/my_gpio_driver",
+    "/dev/my_fnd_driver"
+};
 int dev_svmt;
 int dev_bzzr;
 int dev_gpio;
 int dev_fnd;
 
-int OpenCharDev(const char* dir) {
-    int tmp = open(dir, O_RDWR);
-    if (tmp < 0) {
-        printf("main : Opening %s is not Possible!\n", dir);
-        goto Fatal;
+int openAllDev() {
+    int* cdevs[4];
+    cdevs[0] = &dev_svmt;
+    cdevs[1] = &dev_bzzr;
+    cdevs[2] = &dev_gpio;
+    cdevs[3] = &dev_fnd;
+    int err = 0;
+
+    for (int i = 0; i < 4; i++) {
+        cdevs[i]* = open(cdev_dirs[i], O_RDWR);
+        if (cdevs[i]* < 0) {
+            printf("main : Opening %s is not Possible!\n", cdev_dirs[i]);
+            err -= 1;
+        }
     }
-    return tmp;
+
+    return err;
 }
+
+void closeAllDev() {
+    int* cdevs[4];
+    cdevs[0] = &dev_svmt;
+    cdevs[1] = &dev_bzzr;
+    cdevs[2] = &dev_gpio;
+    cdevs[3] = &dev_fnd;
+    for (int i = 0; i < 4; i++) 
+        if (cdevs[i]* > 0)
+            close(cdevs[i]*);
+}
+
+
 
 
 int toggle_button_state = 0;
