@@ -11,10 +11,12 @@
 #define SERVIVAL     0  // do just three rounds
 #define USER         0  // score index
 #define RASPI        1
-#define OFFALL    2
-#define WIN       1
-#define LOSE      0
+#define DRAW    2
+#define WIN     1
+#define LOSE    0
 
+
+////////////////////// clock timer //////////////////////
 
 typedef struct timespec Pitime;
 Pitime gettime_now;
@@ -22,18 +24,25 @@ Pitime NOW() {
     clock_gettime(CLOCK_REALTIME, &gettime_now);
     return gettime_now;
 }
-int isTimePassed_s(Pitime* ref, int time_sec) {
-    int pass_sec = ref->tv_sec + time_sec;
+int isTimePassed_us(Pitime* ref, int time_us) {
+    // 1s = 1,000,000us, 1us = 1,000ns
+    int time_sec  = time_us / 1000000;
+    int time_nsec = (time_us - time_sec) * 1000;
+    int passed_sec = ref->tv_sec + time_sec;
+    int passed_nsec = ref->tv_nsec + time_nsec;
+    if (passed_nsec > 1000000000) { // control overflow
+        passed_sec++;
+        passed_nsec -= 1000000000;
+    }
     clock_gettime(CLOCK_REALTIME, &gettime_now);
-    printf("now : %d\n", gettime_now.tv_sec);
-    return (gettime_now.tv_sec < pass_sec) ? 0 : 1;
+    return (gettime_now.tv_sec <= passed_sec) ? 0 : (gettime_now.tv_nsec < passed_nsec) ? 0 : 1;
 }
 
 int myRand() {
     Pitime rand_seed;
     rand_seed = NOW();
 #ifdef DEBUG_R
-    printf("main : rand val : %d\n", (rand_seed.tv_nsec & 1));
+    printf("main : rand val : %d", (rand_seed.tv_nsec & 1));
 #endif
     return rand_seed.tv_nsec & 1;
 }
@@ -57,6 +66,8 @@ int dev_fnd;
 int openAllDev();
 void closeAllDev();
 
+
+////////////////////// GPIO //////////////////////
 
 int toggle_button_state = 0;
 
@@ -96,6 +107,8 @@ void writeLED(const int winflag) {
 }
 
 
+////////////////////// Buzzer //////////////////////
+
 void playBuzzer(char song) {
     static char prev_song = 'i';
     if (prev_song != song) {
@@ -104,6 +117,8 @@ void playBuzzer(char song) {
     }
 }
 
+
+////////////////////// 7-Segment //////////////////////
 
 #define D1 0x01
 #define D2 0x02
@@ -126,7 +141,11 @@ int FND(int* score) {
 }
 
 
+////////////////////// Servo Motor //////////////////////
 
+
+
+////////////////////// main //////////////////////
 
 int main(void) {
 
@@ -142,19 +161,22 @@ int main(void) {
     // game started. wait 2sec...
     Pitime time_ref = NOW();
     int game_mode = SERVIVAL;
-    while (!isTimePassed_s(&time_ref, 2)) buttonUpdate();
+    while (!isTimePassed_us(&time_ref, 2000000)) buttonUpdate();
     if (toggle_button_state == 0) {
         toggle_button_state = 1;
         game_mode = DEATH_MATCH;
     }
 
-    printf("game starts, mode = %s\n", game_mode == SERVIVAL ? "SERVIVAL" : "DEATH MATCH");
+
     // initialize variables for loop
     int score[2] = { 3, 3 };
     int stage_count = (game_mode == SERVIVAL) ? 3 : 999999999;
     int stage_result = 1;
     int rpi_dir, usr_dir, usr_dir0, usr_dir1;
     time_ref = NOW();
+#ifdef DEBUG
+    int stage_count = 1;
+#endif
 
     while (toggle_button_state) {
         // Face Detecting...
@@ -162,25 +184,40 @@ int main(void) {
         FND(score);
         buttonUpdate();
 
-        if(!isTimePassed_s(&time_ref, 1)){ // ~1s
+        if(!isTimePassed_us(&time_ref, 700000)){ // ~0.7s
 
-            //printf("stage 1\n");
+
+#ifdef DEBUG
+            if (stage_count == 1) {printf("Stage 1\n"); stage_count++;}
+#endif
             playBuzzer('a'); //cham cham cham! (only once)
-
-        } else if (!isTimePassed_s(&time_ref, 2)) { // ~2s
-
-            //printf("stage 2\n");
             rpi_dir = myRand(); //is current system clock count odd? or even?
 
-        } else if (!isTimePassed_s(&time_ref, 3)) { // ~3s
 
-            //printf("stage 3\n");
+        } else if (!isTimePassed_us(&time_ref, 1400000)) { // ~1.4s
+
+
+#ifdef DEBUG
+            if (stage_count == 2) {printf("Stage 2\n"); stage_count++;}
+#endif
+
+
+        } else if (!isTimePassed_us(&time_ref, 3100000)) { // ~3.1s
+            
+
+#ifdef DEBUG
+            if (stage_count == 3) {printf("Stage 3\n"); stage_count++;}
+#endif                
             if (stage_result == 1) playBuzzer('b');  // win (user side)
             else playBuzzer('c'); //stage_result == 0   lose
 
-        } else { // after 3s
+
+        } else { // after 3.1s
             
-            //printf("stage 4\n");
+
+#ifdef DEBUG
+            if (stage_count == 4) {printf("Stage 4\n"); stage_count++;}
+#endif  
             if (stage_result == 1) {  // win (user side)
                 score[RASPI]--;
                 writeLED(WIN);
@@ -203,7 +240,7 @@ int main(void) {
         }
     }
     time_ref = NOW();
-    while (!isTimePassed_s(&time_ref, 2));
+    while (!isTimePassed_us(&time_ref, 2000000));
 
 CDevOpenFatal:
     closeAllDev();
