@@ -13,6 +13,8 @@ inline Pitime NOW_ns() {
     clock_gettime(CLOCK_REALTIME, &gettime_now);
     return gettime_now.tv_nsec;
 }
+#define SEC_ns  1000000000L
+
 
 #define DRAW    2
 #define WIN     1
@@ -52,7 +54,7 @@ void buttonUpdate() {
 
     if (buff != last_button_state) // if the button signal detected(pressed or noise),
         last_pushed = NOW_ns();         
-    else if ((NOW_ns() - last_pushed) > 20000) // count the time a little
+    else if ((NOW_ns() - last_pushed) > 20000L) // count the time a little
         if (buff != curr_button_state) { // if the button signal is still changed
             curr_button_state = buff;
             if (curr_button_state == '1')
@@ -100,7 +102,7 @@ int main(void) {
 
     // game started. wait a sec...
     Pitime time_ref = NOW_ns();
-    while ((time_ref + msecs_to_jiffies(2000)) > NOW_ns());
+    while ((time_ref + 2000000000) > NOW_ns());
     
     time_ref = NOW_ns();
     while (toggle_button_state){

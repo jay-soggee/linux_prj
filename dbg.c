@@ -45,7 +45,7 @@ void buttonUpdate() {
 
     if (buff != last_button_state) // if the button signal detected(pressed or noise),
         last_pushed = NOW_ns();         
-    else if ((NOW_ns() - last_pushed) > msecs_to_jiffies(20)) // count the time a little
+    else if ((NOW_ns() - last_pushed) > 20000L) // count the time a little
         if (buff != curr_button_state) { // if the button signal is still changed
             curr_button_state = buff;
             if (curr_button_state == '1')
@@ -76,6 +76,12 @@ int main(void) {
     while (!toggle_button_state);
 
     playBuzzer('a');
+
+    // game started. wait a sec...
+    Pitime time_ref = NOW_ns();
+    while ((time_ref + 2000000000) > NOW_ns());
+
+    playBuzzer('b');
 
     close(dev_bzzr);
     close(dev_gpio);
