@@ -6,14 +6,21 @@
 
 #define DEBUG
 
-typedef long int Pitime;
-struct timespec gettime_now;
-// get time in nanosec.
-Pitime NOW_ns() {
+typedef struct timespec Pitime;
+Pitime gettime_now;
+Pitime NOW() {
     clock_gettime(CLOCK_REALTIME, &gettime_now);
-    return gettime_now.tv_nsec;
+    return gettime_now;
 }
-#define SEC_ns  1000000000L
+int isTimePassed_us(Pitime ref, int time_us) {
+    // 1s = 1,000,000us, 1us = 1,000ns
+    int time_sec  = time_us / 1000000;
+    int time_nsec = (time_us % 1000000) * 1000;
+    int passed_sec = ref.tv_sec + time_sec;
+    int passed_nsec = ref.tv_nsec + time_nsec;
+    clock_gettime(CLOCK_REALTIME, &gettime_now);
+    return (gettime_now.tv_sec < passed_sec) ? 0 : (gettime_now.tv_nsec < passed_nsec) ? 0 : 1;
+}
 
 
 #define DRAW    2
@@ -37,6 +44,10 @@ int dev_svmt;
 int dev_bzzr;
 int dev_gpio;
 int dev_fnd;
+#define ERR_OPN_SVMT    (1 << 0)
+#define ERR_OPN_BZZR    (1 << 1)
+#define ERR_OPN_GPIO    (1 << 2)
+#define ERR_OPN_FND     (1 << 3)
 
 int openAllDev() {
     int* cdevs[4] = {
@@ -52,7 +63,7 @@ int openAllDev() {
         *cdevs[i] = open(cdev_dirs[i], O_RDWR);
         if (*cdevs[i] < 0) {
             printf("main : Opening %s is not Possible!\n", cdev_dirs[i]);
-            err -= 1;
+            err += (1 << i);
         }
     }
 
@@ -85,8 +96,8 @@ void buttonUpdate() {
     read(dev_gpio, &buff, 1); // read pin 6
 
     if (buff != last_button_state) // if the button signal detected(pressed or noise),
-        last_pushed = NOW_ns();         
-    else if ((NOW_ns() - last_pushed) > 20000L) // count the time a little
+        last_pushed = NOW();         
+    else if ((NOW() - last_pushed) > 20000L) // count the time a little
         if (buff != curr_button_state) { // if the button signal is still changed
             curr_button_state = buff;
             if (curr_button_state == '1')
@@ -118,8 +129,9 @@ int FND(int dev, int* score) {
 
 int main(void) {
 
-    openAllDev();
-
+    int opn_err = openAllDev();
+    if (opn_err & ERR_OPN_GPIO) goto CDevOpenFatal;
+    
 
     // wait for the start button pressed (behave as toggle)
     do {buttonUpdate();} 
@@ -129,10 +141,10 @@ int main(void) {
     Motor(0);
 
     // game started. wait a sec...
-    Pitime time_ref = NOW_ns();
-    while ((time_ref + 2000000000) > NOW_ns());
+    Pitime time_ref = NOW();
+    while (isTimePassed_us(time_ref, 2000000));
     
-    time_ref = NOW_ns();
+    time_ref = NOW();
     while (toggle_button_state){
         // Face Detecting...
 
@@ -175,7 +187,7 @@ int main(void) {
             //이 else문은 스테이지가 끝나고 한번만 실행됨
 
             if (--stage_count) {//게임이 안끝났으면
-                time_ref = NOW_ns(); //기준시간 다시 업데이트
+                time_ref = NOW(); //기준시간 다시 업데이트
                 /*스테이지 결과를 스코어에 반영하기*/ 
 
             } else {   //게임이 끝났으면
@@ -206,6 +218,7 @@ int main(void) {
         //LED(0,0);
     }
 
+CDevOpenFatal:
     closeAllDev();
 
     return 0;

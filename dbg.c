@@ -9,7 +9,7 @@
 typedef long int Pitime;
 struct timespec gettime_now;
 // get time in nanosec.
-Pitime NOW_ns() {
+Pitime NOW() {
     clock_gettime(CLOCK_REALTIME, &gettime_now);
     return gettime_now.tv_nsec;
 }
@@ -28,6 +28,10 @@ int dev_svmt;
 int dev_bzzr;
 int dev_gpio;
 int dev_fnd;
+#define ERR_OPN_SVMT    (1 << 0)
+#define ERR_OPN_BZZR    (1 << 1)
+#define ERR_OPN_GPIO    (1 << 2)
+#define ERR_OPN_FND     (1 << 3)
 
 int openAllDev() {
     int* cdevs[4] = {
@@ -43,7 +47,7 @@ int openAllDev() {
         *cdevs[i] = open(cdev_dirs[i], O_RDWR);
         if (*cdevs[i] < 0) {
             printf("main : Opening %s is not Possible!\n", cdev_dirs[i]);
-            err -= 1;
+            err += (1 << i);
         }
     }
 
@@ -74,8 +78,8 @@ void buttonUpdate() {
     read(dev_gpio, &buff, 1); // read pin 6
 
     if (buff != last_button_state) // if the button signal detected(pressed or noise),
-        last_pushed = NOW_ns();         
-    else if ((NOW_ns() - last_pushed) > 20000L) // count the time a little
+        last_pushed = NOW();         
+    else if ((NOW() - last_pushed) > 20000L) // count the time a little
         if (buff != curr_button_state) { // if the button signal is still changed
             curr_button_state = buff;
             if (curr_button_state == '1')
@@ -94,7 +98,8 @@ void playBuzzer(char song) {
 
 int main(void) {
 
-    openAllDev();
+    int opn_err = openAllDev();
+    if (opn_err & ERR_OPN_GPIO) goto CDevOpenFatal;
 
     // wait for the start button pressed (behave as toggle)
     do {buttonUpdate();} 
@@ -103,13 +108,14 @@ int main(void) {
     playBuzzer('a');
 
     // game started. wait a sec...
-    Pitime time_ref = NOW_ns();
-    while ((time_ref + 2000000000) > NOW_ns());
+    Pitime time_ref = NOW();
+    while (isTimePassed_us(time_ref, 2000000));
 
     playBuzzer('b');
 
-    time_ref = NOW_ns();
-    while ((time_ref + 2000000000) > NOW_ns());
+    time_ref = NOW();
+    while (isTimePassed_us(time_ref, 2000000));
+
     
     closeAllDev();
     return 0;
