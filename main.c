@@ -15,6 +15,8 @@
 #define LOSE    0
 
 
+////////////////////// clock timer //////////////////////
+
 typedef struct timespec Pitime;
 Pitime gettime_now;
 Pitime NOW() {
@@ -60,6 +62,8 @@ int openAllDev();
 void closeAllDev();
 
 
+////////////////////// GPIO //////////////////////
+
 int toggle_button_state = 0;
 
 // update toggle button signal w/ signal debouncing
@@ -85,12 +89,16 @@ void buttonUpdate() {
 
 void writeLED(const int winflag) {
     char buff = '0';
-    if (winflag)
-        write(dev_gpio, &(++buff), 1);   // blue LED
+    if (winflag) {
+        buff++;
+        write(dev_gpio, &buff, 1);  // blue LED
+    }
     else 
-        write(dev_gpio, &(buff), 1);     // red LED
+        write(dev_gpio, &buff, 1);  // red LED
 }
 
+
+////////////////////// Buzzer //////////////////////
 
 void playBuzzer(char song) {
     static char prev_song = 'i';
@@ -100,6 +108,8 @@ void playBuzzer(char song) {
     }
 }
 
+
+////////////////////// 7-Segment //////////////////////
 
 #define D1 0x01
 #define D2 0x02
@@ -122,7 +132,11 @@ int FND(int* score) {
 }
 
 
+////////////////////// Servo Motor //////////////////////
 
+
+
+////////////////////// main //////////////////////
 
 int main(void) {
 

@@ -10,9 +10,9 @@
 #define SERVIVAL     0  // do just three rounds
 #define USER         0  // score index
 #define RASPI        1
-#define DRAW    2
-#define WIN     1
-#define LOSE    0
+#define OFFALL    2
+#define WIN       1
+#define LOSE      0
 
 
 typedef struct timespec Pitime;
@@ -85,10 +85,12 @@ void buttonUpdate() {
 
 void writeLED(const int winflag) {
     char buff = '0';
-    if (winflag)
-        write(dev_gpio, &(++buff), 1);   // blue LED
+    if (winflag) {
+        buff++;
+        write(dev_gpio, &buff, 1);  // blue LED
+    }
     else 
-        write(dev_gpio, &(buff), 1);     // red LED
+        write(dev_gpio, &buff, 1);  // red LED
 }
 
 
