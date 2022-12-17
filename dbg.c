@@ -9,7 +9,7 @@
 typedef long int Pitime;
 struct timespec gettime_now;
 // get time in nanosec.
-inline Pitime NOW_ns() {
+Pitime NOW_ns() {
     clock_gettime(CLOCK_REALTIME, &gettime_now);
     return gettime_now.tv_nsec;
 }
