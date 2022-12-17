@@ -175,7 +175,7 @@ int main(void) {
     int rpi_dir, usr_dir, usr_dir0, usr_dir1;
     time_ref = NOW();
 #ifdef DEBUG
-    int stage_count = 1;
+    int current = 1;
 #endif
 
     while (toggle_button_state) {
@@ -188,7 +188,7 @@ int main(void) {
 
 
 #ifdef DEBUG
-            if (stage_count == 1) {printf("Stage 1\n"); stage_count++;}
+            if (current == 1) {printf("Stage 1\n"); current++;}
 #endif
             playBuzzer('a'); //cham cham cham! (only once)
             rpi_dir = myRand(); //is current system clock count odd? or even?
@@ -198,7 +198,7 @@ int main(void) {
 
 
 #ifdef DEBUG
-            if (stage_count == 2) {printf("Stage 2\n"); stage_count++;}
+            if (current == 2) {printf("Stage 2\n"); current++;}
 #endif
 
 
@@ -206,7 +206,7 @@ int main(void) {
             
 
 #ifdef DEBUG
-            if (stage_count == 3) {printf("Stage 3\n"); stage_count++;}
+            if (current == 3) {printf("Stage 3\n"); current++;}
 #endif                
             if (stage_result == 1) playBuzzer('b');  // win (user side)
             else playBuzzer('c'); //stage_result == 0   lose
@@ -216,7 +216,7 @@ int main(void) {
             
 
 #ifdef DEBUG
-            if (stage_count == 4) {printf("Stage 4\n"); stage_count++;}
+            if (current == 4) {printf("Stage 4\n"); current++;}
 #endif  
             if (stage_result == 1) {  // win (user side)
                 score[RASPI]--;
