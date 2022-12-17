@@ -97,7 +97,7 @@ void buttonUpdate() {
 
     if (buff != last_button_state) // if the button signal detected(pressed or noise),
         last_pushed = NOW();         
-    else if (isTimePassed_us(last_pushed, 20)) // count the time a little
+    else if (!isTimePassed_us(last_pushed, 20)) // count the time a little
         if (buff != curr_button_state) { // if the button signal is still changed
             curr_button_state = buff;
             if (curr_button_state == '1')
@@ -142,7 +142,7 @@ int main(void) {
 
     // game started. wait a sec...
     Pitime time_ref = NOW();
-    while (isTimePassed_us(time_ref, 2000000));
+    while (!isTimePassed_us(time_ref, 2000000));
     
     time_ref = NOW();
     while (toggle_button_state){
@@ -152,7 +152,7 @@ int main(void) {
         FND(dev_fnd, score);
                 
         /*버튼상태 업데이트*/
-        toggle_button_state = buttonUpdate();
+        buttonUpdate();
 
         if(/*기준부터 0.7초 전까지는...*/){
             /* 참참참 부저 울리기*/
