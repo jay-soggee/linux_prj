@@ -30,16 +30,18 @@ int dev_gpio;
 int dev_fnd;
 
 int openAllDev() {
-    int* cdevs[4];
-    cdevs[0] = &dev_svmt;
-    cdevs[1] = &dev_bzzr;
-    cdevs[2] = &dev_gpio;
-    cdevs[3] = &dev_fnd;
+    int* cdevs[4] = {
+        &dev_svmt,
+        &dev_bzzr,
+        &dev_gpio,
+        &dev_fnd
+    };
     int err = 0;
 
+    // note : access order - [i] is faster than *
     for (int i = 0; i < 4; i++) {
-        cdevs[i]* = open(cdev_dirs[i], O_RDWR);
-        if (cdevs[i]* < 0) {
+        *cdevs[i] = open(cdev_dirs[i], O_RDWR);
+        if (*cdevs[i] < 0) {
             printf("main : Opening %s is not Possible!\n", cdev_dirs[i]);
             err -= 1;
         }
@@ -49,14 +51,15 @@ int openAllDev() {
 }
 
 void closeAllDev() {
-    int* cdevs[4];
-    cdevs[0] = &dev_svmt;
-    cdevs[1] = &dev_bzzr;
-    cdevs[2] = &dev_gpio;
-    cdevs[3] = &dev_fnd;
+    int* cdevs[4] = {
+        &dev_svmt,
+        &dev_bzzr,
+        &dev_gpio,
+        &dev_fnd
+    };
     for (int i = 0; i < 4; i++) 
-        if (cdevs[i]* > 0)
-            close(cdevs[i]*);
+        if (*cdevs[i] > 0)
+            close(*cdevs[i]);
 }
 
 
@@ -107,5 +110,5 @@ int main(void) {
 
     closeAllDev();
     return 0;
-    
+
 }
