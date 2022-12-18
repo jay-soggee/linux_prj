@@ -9,13 +9,13 @@
 #define DEBUG_BTN
 #define DEBUG_TIME
 
-#define DEATH_MATCH  1  // do until someone is defeated
-#define SERVIVAL     0  // do just three rounds
-#define USER         0  // score index
-#define RASPI        1
-#define DRAW    2
-#define WIN     1
-#define LOSE    0
+#define DEATH_MATCH     1  // do until someone is defeated
+#define SERVIVAL        0  // do just three rounds
+#define USER        0  // score index
+#define RASPI       1
+#define LED_OFF         2
+#define LED_WIN         1
+#define LED_LOSE        0
 #define SEC2nSEC    1000000000
 #define SEC2uSEC    1000000
 
@@ -104,13 +104,14 @@ void buttonUpdate() {
 }
 
 void writeLED(const int winflag) {
-    char buff = '0';
-    if (winflag) {
-        buff++;
-        write(dev_gpio, &buff, 1);  // blue LED
-    }
-    else 
-        write(dev_gpio, &buff, 1);  // red LED
+    char buff;
+    if      (winflag == LED_WIN)
+        buff = '1'; // blue LED
+    else if (winflag == LED_OFF)
+        buff = '2'; // turn all LED off
+    else // (winflag == LED_LOSE)
+        buff = '0'; // red LED
+    write(dev_gpio, &buff, 1);
 }
 
 
@@ -185,6 +186,7 @@ int main(void) {
     int stage_result = 1;
     int rpi_dir, usr_dir, usr_dir0, usr_dir1;
     time_ref = NOW();
+    //TODO: init motor to 0.
 #ifdef DEBUG
     int current = 0;
 #endif
@@ -196,7 +198,7 @@ int main(void) {
         buttonUpdate();
         passed_time_from_ref = timePassed_us(&time_ref);
             /////////////////////////////////////////
-        if(passed_time_from_ref < (0.7 * SEC2uSEC)){ 
+        if (passed_time_from_ref < (0.7 * SEC2uSEC)){ 
 
 
 #ifdef DEBUG
@@ -204,41 +206,47 @@ int main(void) {
 #endif
             playBuzzer('a'); //cham cham cham! (only once)
             rpi_dir = myRand(); //is current system clock count odd? or even?
+            //TODO: motor set to 0 (only once)
+            //FIXME: get user face direction0.
+
 
             //////////////    ~0.7s    //////////////
         } else if (passed_time_from_ref <  (1.4 * SEC2uSEC)) { 
 
 
 #ifdef DEBUG
-            if (current != 2) {printf("Stage 2\n"); current = 2;}
+            if (current != 2) {printf("Stage 2 : rpi_dir = %d, usr_dir0 = \n", rpi_dir); current = 2;}
 #endif
+            writeLED(LED_OFF);
+            //TODO: motor set to dir_rpi (only once)
+            //FIXME: get user face direction1.
 
 
             //////////////    ~1.4s    //////////////
-        } else if (passed_time_from_ref < (3.1 * SEC2uSEC)) {
+        } else if (passed_time_from_ref < (4.1 * SEC2uSEC)) {
             
 
 #ifdef DEBUG
-            if (current != 3) {printf("Stage 3\n"); current = 3;}
+            if (current != 3) {printf("Stage 3 : usr_dir1 = \n"); current = 3;}
 #endif                
             if (stage_result == 1) playBuzzer('b');  // win (user side)
             else playBuzzer('c'); //stage_result == 0   lose
+            //FIXME: compute user's decision and update the result.
 
-
-            //////////////    ~3.1s    //////////////
+            //////////////    ~4.1s    //////////////
         } else {
-            ////////////// after 3.1s  //////////////
+            ////////////// after 4.1s  //////////////
 
 #ifdef DEBUG
             if (current != 4) {printf("Stage 4\n"); current = 4;}
 #endif  
             if (stage_result == 1) {  // win (user side)
                 score[RASPI]--;
-                writeLED(WIN);
+                writeLED(LED_WIN);
             }
             else {                    // lose
                 score[USER]--;
-                writeLED(LOSE);
+                writeLED(LED_LOSE);
             }
 
             if (--stage_count && (score[RASPI] && score[USER])) {
