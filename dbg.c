@@ -31,8 +31,8 @@ inline void initRefToPass() {
 }
 int isTimePassed_us(Pitime* ref, int time_to_pass_us) {
     // 1s = 1,000,000us, 1us = 1,000ns
-    int time_to_pass_s  =  time_us / 1000000;
-    int time_to_pass_us = (time_us % 1000000) * 1000;
+    int time_to_pass_s  =  time_to_pass_us / 1000000;
+    int time_to_pass_us = (time_to_pass_us % 1000000) * 1000;
     clock_gettime(CLOCK_REALTIME, &gettime_now);
     int time_passed_us  = ref->tv_nsec - gettime_now.tv_nsec;
     int underflow = time_passed_us < 0 ? 1 : 0;
