@@ -168,7 +168,7 @@ void setMotor(int motor_dir){
     else if (motor_dir == MTR_RIGT)     buff = '2'; // Turn Right
     else  /*(motor_dir == MTR_CENT)*/   buff = '1'; // Center
 
-    dev(dev_svmt, &buff, 1);
+    write(dev_svmt, &buff, 1);
 
     prev_dir = motor_dir;
 }

@@ -136,7 +136,7 @@ void playBuzzer(char song) {
 #define D4 0x07
 
 const char seg_num[10] = {
-    ~0xc0, ~0xf9, ~0xa4, ~0xb0, ~0x99, ~0x92, ~0x82, ~0xd8, ~0x80, ~0x90
+    0x3F, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x27, 0x7F, 0x6F
 };
 const char seg_dot = 0x80;
 int FND(int* score) {
@@ -159,7 +159,7 @@ int FND(int* score) {
 #define MTR_LEFT        0
 #define MTR_RIGT        1
 
-int setMotor(int motor_dir){
+void setMotor(int motor_dir){
     static int prev_dir = 3;
     if (prev_dir == motor_dir) return;
 
@@ -168,7 +168,7 @@ int setMotor(int motor_dir){
     else if (motor_dir == MTR_RIGT)     buff = '2'; // Turn Right
     else  /*(motor_dir == MTR_CENT)*/   buff = '1'; // Center
 
-    dev(dev_svmt, &buff, 1);
+    write(dev_svmt, &buff, 1);
 
     prev_dir = motor_dir;
 }
@@ -295,7 +295,7 @@ int main(void) {
     while (timePassed_us(&time_ref) < (2 * SEC2uSEC));
     writeLED(LED_OFF);
     setMotor(MTR_CENT);
-    
+
 CDevOpenFatal:
     closeAllDev();
 
