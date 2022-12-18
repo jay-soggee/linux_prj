@@ -1,11 +1,19 @@
 # Emb. Sys. prj
 
-driver_*.c : ����̹� /dev/my_*_driver
+## 주의사항
 
-main.c : ���� �ڵ�
+- 컴파일에 rt 라이브러리가 필요함
 
-dbg.c : �۾� ����(�����ڵ� ���纻)
+- gcc -o 이름 경로 *-lrt*
 
-- FIXME : �󱼹����νİ���
+## 구성요소
 
-- TODO : ���Ͱ���
+driver_\*.c : 드라이버 /dev/my_\*_driver
+
+main.c : 메인 코드
+
+dbg.c : 작업 영역(메인코드 복사본)
+
+- FIXME : 얼굴방향인식관련
+
+- TODO : 모터관련
