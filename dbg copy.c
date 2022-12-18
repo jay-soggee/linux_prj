@@ -34,7 +34,7 @@ int timePassed_ns(Pitime* ref) {
     clock_gettime(CLOCK_REALTIME, &gettime_now);
     time_passed_nsec  = gettime_now.tv_nsec - ref->tv_nsec;
     underflow = time_passed_nsec < 0 ? 1 : 0;
-    if (underflow) time_passed_nsec + ONE_SEC;
+    if (underflow) time_passed_nsec + 1 * SEC2nSEC;
     time_passed_sec   = gettime_now.tv_sec  - ref->tv_sec - underflow;
 #ifdef DEBUG_TIME
     if (time_passed_sec < 0) printf("timePassed_ns : !");
