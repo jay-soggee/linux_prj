@@ -117,7 +117,7 @@ static ssize_t driver_write(struct file *File, const char *user_buffer, size_t c
  * @brief This function is called, when the device file is opened
  */
 static int driver_open(struct inode *device_file, struct file *instance) {
-    printk("fnd_driver - open was called!\n");
+    printk("my_fnd_driver : open was called!\n");
     return 0;
 }
 
@@ -125,7 +125,7 @@ static int driver_open(struct inode *device_file, struct file *instance) {
  * @brief This function is called, when the device file is opened
  */
 static int driver_close(struct inode *device_file, struct file *instance) {
-    printk("fnd_driver - close was called!\n");
+    printk("my_fnd_driver : close was called!\n");
     return 0;
 }
 
@@ -144,20 +144,20 @@ static int __init ModuleInit(void) {
 
     /* Allocate a device nr */
     if( alloc_chrdev_region(&my_device_nr, 0, 1, DRIVER_NAME) < 0) {
-        printk("fnd_driver could not be allocated!\n");
+        printk("my_fnd_driver : could not be allocated!\n");
         return -1;
     }
-    printk("read_write - Device Nr. Major: %d, Minor: %d was registered!\n", my_device_nr >> 20, my_device_nr && 0xfffff);
+    printk("my_fnd_driver : Device Nr. Major: %d, Minor: %d was registered!\n", my_device_nr >> 20, my_device_nr && 0xfffff);
 
     /* Create device class */
     if((my_class = class_create(THIS_MODULE, DRIVER_CLASS)) == NULL) {
-        printk("Device class can not be created!\n");
+        printk("my_fnd_driver : Device class can not be created!\n");
         goto ClassError;
     }
 
     /* create device file */
     if(device_create(my_class, NULL, my_device_nr, NULL, DRIVER_NAME) == NULL) {
-        printk("Can not create device file!\n");
+        printk("my_fnd_driver : Can not create device file!\n");
         goto FileError;
     }
 
@@ -166,151 +166,151 @@ static int __init ModuleInit(void) {
 
     /* Regisering device to kernel */
     if(cdev_add(&my_device, my_device_nr, 1) == -1) {
-        printk("Registering of device to kernel failed!\n");
+        printk("my_fnd_driver : Registering of device to kernel failed!\n");
         goto AddError;
     }
 
     /* GPIO 2 : init */
     if(gpio_request(2, "rpi-gpio-2")) {
-        printk("Can not allocate GPIO 2\n");
+        printk("my_fnd_driver : Can not allocate GPIO 2\n");
         goto AddError;
     }
 
     /* Set GPIO 2 direction */
     if(gpio_direction_output(2, 0)) {
-        printk("Can not set GPIO 2 to output!\n");
+        printk("my_fnd_driver : Can not set GPIO 2 to output!\n");
         goto Gpio2Error;
     }
 
     /* GPIO 3 init */
     if(gpio_request(3, "rpi-gpio-3")) {
-        printk("Can not allocate GPIO 3\n");
+        printk("my_fnd_driver : Can not allocate GPIO 3\n");
         goto Gpio2Error;
     }
 
     /* Set GPIO 3 direction */
     if(gpio_direction_output(3, 0)) {
-        printk("Can not set GPIO 3 to output!\n");
+        printk("my_fnd_driver : Can not set GPIO 3 to output!\n");
         goto Gpio3Error;
     }
 
     /* GPIO 4 init */
     if(gpio_request(4, "rpi-gpio-4")) {
-        printk("Can not allocate GPIO 4\n");
+        printk("my_fnd_driver : Can not allocate GPIO 4\n");
         goto Gpio3Error;
     }
 
     /* Set GPIO 4 direction */
     if(gpio_direction_output(4, 0)) {
-        printk("Can not set GPIO 4 to output!\n");
+        printk("my_fnd_driver : Can not set GPIO 4 to output!\n");
         goto Gpio4Error;
     }
 
     /* GPIO 5 init */
     if(gpio_request(5, "rpi-gpio-5")) {
-        printk("Can not allocate GPIO 5\n");
+        printk("my_fnd_driver : Can not allocate GPIO 5\n");
         goto Gpio4Error;
     }
 
     /* Set GPIO 5 direction */
     if(gpio_direction_output(5, 0)) {
-        printk("Can not set GPIO 5 to output!\n");
+        printk("my_fnd_driver : Can not set GPIO 5 to output!\n");
         goto Gpio5Error;
     }
 
     /* GPIO 7 init */
     if(gpio_request(7, "rpi-gpio-7")) {
-        printk("Can not allocate GPIO 7\n");
+        printk("my_fnd_driver : Can not allocate GPIO 7\n");
         goto Gpio5Error;
     }
 
     /* Set GPIO 7 direction */
     if(gpio_direction_output(7, 0)) {
-        printk("Can not set GPIO 7 to output!\n");
+        printk("my_fnd_driver : Can not set GPIO 7 to output!\n");
         goto Gpio7Error;
     }
 
     /* GPIO 8 init */
     if(gpio_request(8, "rpi-gpio-8")) {
-        printk("Can not allocate GPIO 8\n");
+        printk("my_fnd_driver : Can not allocate GPIO 8\n");
         goto Gpio7Error;
     }
 
     /* Set GPIO 8 direction */
     if(gpio_direction_output(8, 0)) {
-        printk("Can not set GPIO 8 to output!\n");
+        printk("my_fnd_driver : Can not set GPIO 8 to output!\n");
         goto Gpio8Error;
     }
 
     /* GPIO 16 init */
     if(gpio_request(16, "rpi-gpio-16")) {
-        printk("Can not allocate GPIO 16\n");
+        printk("my_fnd_driver : Can not allocate GPIO 16\n");
         goto Gpio8Error;
     }
 
     /* Set GPIO 16 direction */
     if(gpio_direction_output(16, 0)) {
-        printk("Can not set GPIO 16 to output!\n");
+        printk("my_fnd_driver : Can not set GPIO 16 to output!\n");
         goto Gpio16Error;
     }
 
     /* GPIO 17 init */
     if(gpio_request(17, "rpi-gpio-17")) {
-        printk("Can not allocate GPIO 17\n");
+        printk("my_fnd_driver : Can not allocate GPIO 17\n");
         goto Gpio16Error;
     }
 
     /* Set GPIO 17 direction */
     if(gpio_direction_output(17, 0)) {
-        printk("Can not set GPIO 17 to output!\n");
+        printk("my_fnd_driver : Can not set GPIO 17 to output!\n");
         goto Gpio17Error;
     }
 
     /* GPIO 20 init */
     if(gpio_request(20, "rpi-gpio-20")) {
-        printk("Can not allocate GPIO 20\n");
+        printk("my_fnd_driver : Can not allocate GPIO 20\n");
         goto Gpio17Error;
     }
 
     /* Set GPIO 20 direction */
     if(gpio_direction_output(20, 0)) {
-        printk("Can not set GPIO 20 to output!\n");
+        printk("my_fnd_driver : Can not set GPIO 20 to output!\n");
         goto Gpio20Error;
     }
 
     /* GPIO 21 init */
     if(gpio_request(21, "rpi-gpio-21")) {
-        printk("Can not allocate GPIO 21\n");
+        printk("my_fnd_driver : Can not allocate GPIO 21\n");
         goto Gpio20Error;
     }
 
     /* Set GPIO 21 direction */
     if(gpio_direction_output(21, 0)) {
-        printk("Can not set GPIO 21 to output!\n");
+        printk("my_fnd_driver : Can not set GPIO 21 to output!\n");
         goto Gpio21Error;
     }
 
     /* GPIO 24 init */
     if(gpio_request(24, "rpi-gpio-24")) {
-        printk("Can not allocate GPIO 24\n");
+        printk("my_fnd_driver : Can not allocate GPIO 24\n");
         goto Gpio21Error;
     }
 
     /* Set GPIO 24 direction */
     if(gpio_direction_output(24, 0)) {
-        printk("Can not set GPIO 24 to input!\n");
+        printk("my_fnd_driver : Can not set GPIO 24 to input!\n");
         goto Gpio24Error;
     }
 
     /* GPIO 25 init */
     if(gpio_request(25, "rpi-gpio-25")) {
-        printk("Can not allocate GPIO 25\n");
+        printk("my_fnd_driver : Can not allocate GPIO 25\n");
         goto Gpio24Error;
     }
 
     /* Set GPIO 25 direction */
     if(gpio_direction_output(25,0)) {
-        printk("Can not set GPIO 25 to output!\n");
+        printk("my_fnd_driver : Can not set GPIO 25 to output!\n");
         goto Gpio25Error;
     }
 

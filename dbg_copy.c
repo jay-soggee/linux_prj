@@ -9,17 +9,11 @@
 #define DEBUG_BTN
 #define DEBUG_TIME
 
-#define DEATH_MATCH     1  // do until someone is defeated
-#define SERVIVAL        0  // do just three rounds
-#define USER        0  // score index
-#define RASPI       1
-#define LED_OFF         2
-#define LED_WIN         1
-#define LED_LOSE        0
-#define SEC2nSEC    1000000000
-#define SEC2uSEC    1000000
 
 ////////////////////// clock timer //////////////////////
+
+#define SEC2nSEC    1000000000
+#define SEC2uSEC    1000000
 
 typedef struct timespec Pitime;
 Pitime gettime_now;
@@ -76,10 +70,14 @@ void closeAllDev();
 
 ////////////////////// GPIO //////////////////////
 
+#define LED_OFF         2
+#define LED_WIN         1
+#define LED_LOSE        0
+
 int toggle_button_state = 0;
 
 // update toggle button signal w/ signal debouncing
-void buttonUpdate() {
+void updateButton() {
     const  int      debounce_time_us = 40;
            char     buff;
     static char     last_button_state = '0';
@@ -95,7 +93,7 @@ void buttonUpdate() {
             curr_button_state = buff;
             if (curr_button_state == '1') {
 #ifdef DEBUG_TIME
-                printf("buttonUpdate : pressed\n");
+                printf("updateButton : pressed\n");
 #endif
                 toggle_button_state = !toggle_button_state;
             }
@@ -104,16 +102,14 @@ void buttonUpdate() {
 }
 
 void writeLED(const int winflag) {
-    static int prev_winflag = '0';
+    static int prev_winflag = 0;
     if (prev_winflag == winflag) return;
 
     char buff;
-    if      (winflag == LED_WIN)
-        buff = '1'; // blue LED
-    else if (winflag == LED_OFF)
-        buff = '2'; // turn all LED off
-    else // (winflag == LED_LOSE)
-        buff = '0'; // red LED
+    if      (winflag == LED_WIN)    buff = '1'; // blue LED
+    else if (winflag == LED_OFF)    buff = '2'; // turn all LED off
+    else  /*(winflag == LED_LOSE)*/ buff = '0'; // red LED
+
     write(dev_gpio, &buff, 1);
 
     prev_winflag = winflag;
@@ -134,13 +130,15 @@ void playBuzzer(char song) {
 
 ////////////////////// 7-Segment //////////////////////
 
-#define D1 0x01
-#define D2 0x02
-#define D3 0x04
-#define D4 0x08
+#define D1 0x0e
+#define D2 0x0D
+#define D3 0x0B
+#define D4 0x07
 
-const char seg_num[10] = {0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xd8, 0x80, 0x90};
-const char seg_dot = 0x7f;
+const char seg_num[10] = {
+    ~0xc0, ~0xf9, ~0xa4, ~0xb0, ~0x99, ~0x92, ~0x82, ~0xd8, ~0x80, ~0x90
+};
+const char seg_dot = 0x80;
 int FND(int* score) {
     unsigned short data[3];
     static int n = 0;
@@ -157,9 +155,31 @@ int FND(int* score) {
 
 ////////////////////// Servo Motor //////////////////////
 
+#define MTR_CENT        2
+#define MTR_LEFT        0
+#define MTR_RIGT        1
+
+int setMotor(int motor_dir){
+    static int prev_dir = 3;
+    if (prev_dir == motor_dir) return;
+
+    char buff = '0';
+    if      (motor_dir == MTR_LEFT)     buff = '0'; // Turn Left
+    else if (motor_dir == MTR_RIGT)     buff = '2'; // Turn Right
+    else  /*(motor_dir == MTR_CENT)*/   buff = '1'; // Center
+
+    dev(dev_svmt, &buff, 1);
+
+    prev_dir = motor_dir;
+}
 
 
 ////////////////////// main //////////////////////
+
+#define DEATH_MATCH     1  // do until someone is defeated
+#define SERVIVAL        0  // do just three rounds
+#define USER        0  // score index
+#define RASPI       1
 
 int main(void) {
     Pitime time_ref;
@@ -170,13 +190,13 @@ int main(void) {
     
 
     // wait for the start button pressed (behave as toggle)
-    do {buttonUpdate();} 
+    do {updateButton();} 
     while (!toggle_button_state);
 
     // game started. wait 2sec...
     int game_mode = SERVIVAL;
     time_ref = NOW();
-    while (timePassed_us(&time_ref) < (2 * SEC2uSEC)) buttonUpdate();
+    while (timePassed_us(&time_ref) < (2 * SEC2uSEC)) updateButton();
     if (toggle_button_state == 0) {
         toggle_button_state = 1;
         game_mode = DEATH_MATCH;
@@ -192,16 +212,15 @@ int main(void) {
     int stage_result = 1;
     int rpi_dir, usr_dir, usr_dir0, usr_dir1;
     time_ref = NOW();
-    //TODO: init motor to 0.
+    setMotor(MTR_CENT);
 #ifdef DEBUG
     int current = 0;
 #endif
 
     while (toggle_button_state) {
-        // Face Detecting...
 
         FND(score);
-        buttonUpdate();
+        updateButton();
         passed_time_from_ref = timePassed_us(&time_ref);
 
         //************* switch(passed_time) *************//
@@ -213,7 +232,7 @@ int main(void) {
 #endif
             playBuzzer('a'); //cham cham cham! (only once)
             rpi_dir = myRand(); //is current system clock count odd? or even?
-            //TODO: motor set to 0 (only once)
+            setMotor(MTR_CENT);
             //FIXME: get user face direction0.
 
 
@@ -224,7 +243,7 @@ int main(void) {
 #ifdef DEBUG
             if (current != 2) {printf("Stage 2 : rpi_dir = %d, usr_dir0 = \n", rpi_dir); current = 2;}
 #endif
-            //TODO: motor set to dir_rpi (only once)
+            setMotor(rpi_dir);
             //FIXME: get user face direction1.
 
 
@@ -275,6 +294,7 @@ int main(void) {
     time_ref = NOW();
     while (timePassed_us(&time_ref) < (2 * SEC2uSEC));
     writeLED(LED_OFF);
+    setMotor(MTR_CENT);
     
 CDevOpenFatal:
     closeAllDev();

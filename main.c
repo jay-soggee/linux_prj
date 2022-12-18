@@ -79,7 +79,7 @@ void closeAllDev();
 int toggle_button_state = 0;
 
 // update toggle button signal w/ signal debouncing
-void buttonUpdate() {
+void updateButton() {
     const  int      debounce_time_us = 40;
            char     buff;
     static char     last_button_state = '0';
@@ -95,7 +95,7 @@ void buttonUpdate() {
             curr_button_state = buff;
             if (curr_button_state == '1') {
 #ifdef DEBUG_TIME
-                printf("buttonUpdate : pressed\n");
+                printf("updateButton : pressed\n");
 #endif
                 toggle_button_state = !toggle_button_state;
             }
@@ -170,13 +170,13 @@ int main(void) {
     
 
     // wait for the start button pressed (behave as toggle)
-    do {buttonUpdate();} 
+    do {updateButton();} 
     while (!toggle_button_state);
 
     // game started. wait 2sec...
     int game_mode = SERVIVAL;
     time_ref = NOW();
-    while (timePassed_us(&time_ref) < (2 * SEC2uSEC)) buttonUpdate();
+    while (timePassed_us(&time_ref) < (2 * SEC2uSEC)) updateButton();
     if (toggle_button_state == 0) {
         toggle_button_state = 1;
         game_mode = DEATH_MATCH;
@@ -201,7 +201,7 @@ int main(void) {
         // Face Detecting...
 
         FND(score);
-        buttonUpdate();
+        updateButton();
         passed_time_from_ref = timePassed_us(&time_ref);
 
         //************* switch(passed_time) *************//
