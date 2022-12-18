@@ -1,5 +1,13 @@
 # Emb. Sys. prj
 
+## 주의사항
+
+- 컴파일에 rt 라이브러리가 필요함
+
+- gcc -o 이름 경로 *-lrt*
+
+## 구성요소
+
 driver_\*.c : 드라이버 /dev/my_\*_driver
 
 main.c : 메인 코드
