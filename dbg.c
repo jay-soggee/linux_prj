@@ -148,8 +148,7 @@ int FND(int* score) {
     data[1] = (seg_num[score[1]] << 4) | D4;
 
     write(dev_fnd, &data[n], 2);
-    n++;
-    n = (n + 1) % 2;
+    n = (n + 1) % 3;
 }
 
 

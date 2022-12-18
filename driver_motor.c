@@ -61,7 +61,7 @@ static ssize_t driver_write(struct file *File, const char *user_buffer, size_t c
  * @brief This function is called, when the device file is opened
  */
 static int driver_open(struct inode *device_file, struct file *instance) {
-	printk("motor_driver - open was called!\n");
+	printk("my_motor_driver : open was called!\n");
 	return 0;
 }
 
@@ -69,7 +69,7 @@ static int driver_open(struct inode *device_file, struct file *instance) {
  * @brief This function is called, when the device file is opened
  */
 static int driver_close(struct inode *device_file, struct file *instance) {
-	printk("motor_driver - close was called!\n");
+	printk("my_motor_driver : close was called!\n");
 	return 0;
 }
 
@@ -84,24 +84,24 @@ static struct file_operations fops = {
  * @brief This function is called, when the module is loaded into the kernel
  */
 static int __init ModuleInit(void) {
-	printk("Hello, Motor Kernel!\n");
+	printk("my_motor_driver : Hello, Motor Kernel!\n");
 
 	/* Allocate a device nr */
 	if( alloc_chrdev_region(&my_device_nr, 0, 1, DRIVER_NAME) < 0) {
-		printk("Device Nr. could not be allocated!\n");
+		printk("my_motor_driver : Device Nr. could not be allocated!\n");
 		return -1;
 	}
-	printk("read_write - Device Nr. Major: %d, Minor: %d was registered!\n", my_device_nr >> 20, my_device_nr && 0xfffff);
+	printk("my_motor_driver : Device Nr. Major: %d, Minor: %d was registered!\n", my_device_nr >> 20, my_device_nr && 0xfffff);
 
 	/* Create device class */
 	if((my_class = class_create(THIS_MODULE, DRIVER_CLASS)) == NULL) {
-		printk("Device class can not be created!\n");
+		printk("my_motor_driver : Device class can not be created!\n");
 		goto ClassError;
 	}
 
 	/* create device file */
 	if(device_create(my_class, NULL, my_device_nr, NULL, DRIVER_NAME) == NULL) {
-		printk("Can not create device file!\n");
+		printk("my_motor_driver : Can not create device file!\n");
 		goto FileError;
 	}
 
@@ -110,13 +110,13 @@ static int __init ModuleInit(void) {
 
 	/* Regisering device to kernel */
 	if(cdev_add(&my_device, my_device_nr, 1) == -1) {
-		printk("Registering of device to kernel failed!\n");
+		printk("my_motor_driver : Registering of device to kernel failed!\n");
 		goto AddError;
 	}
 
-	pwm0 = pwm_request(0, "my-pwm");
+	pwm0 = pwm_request(0, "my-pwm0");
 	if(pwm0 == NULL) {
-		printk("Could not get PWM0!\n");
+		printk("my_motor_driver : Could not get PWM0!\n");
 		goto AddError;
 	}
 

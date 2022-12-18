@@ -194,7 +194,7 @@ static int __init ModuleInit(void) {
     }
 
     ////////////// initialize pwm 1 //////////////
-    pwm1 = pwm_request(1, "my-pwm");
+    pwm1 = pwm_request(1, "my-pwm1");
     if(pwm1 == NULL) {
         printk("my_buzzer_driver : Could not get PWM1!\n");
         goto AddError;
