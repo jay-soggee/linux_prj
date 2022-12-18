@@ -6,6 +6,7 @@
 
 //#define DEBUG_R
 #define DEBUG
+#define DEBUG_BTN
 #define DEBUG_TIME
 
 #define DEATH_MATCH  1  // do until someone is defeated
@@ -16,6 +17,7 @@
 #define WIN     1
 #define LOSE    0
 #define SEC2nSEC    1000000000
+#define SEC2uSEC    1000000
 
 ////////////////////// clock timer //////////////////////
 
@@ -25,7 +27,8 @@ Pitime NOW() {
     clock_gettime(CLOCK_REALTIME, &gettime_now);
     return gettime_now;
 }
-int timePassed_ns(Pitime* ref) {
+
+int timePassed_us(Pitime* ref) {
     int time_passed_nsec;
     int time_passed_sec;
     int underflow;
@@ -34,19 +37,19 @@ int timePassed_ns(Pitime* ref) {
     clock_gettime(CLOCK_REALTIME, &gettime_now);
     time_passed_nsec  = gettime_now.tv_nsec - ref->tv_nsec;
     underflow = time_passed_nsec < 0 ? 1 : 0;
-    if (underflow) time_passed_nsec + 1 * SEC2nSEC;
+    if (underflow) time_passed_nsec += 1 * SEC2nSEC;
     time_passed_sec   = gettime_now.tv_sec  - ref->tv_sec - underflow;
 #ifdef DEBUG_TIME
-    if (time_passed_sec < 0) printf("timePassed_ns : !");
+    if (time_passed_sec < 0) printf("timePassed_us : !\n");
 #endif
-    return time_passed_sec * SEC2nSEC + time_passed_nsec;
+    return time_passed_sec * SEC2uSEC + time_passed_nsec / 1000;
 }
 
 int myRand() {
     Pitime rand_seed;
     rand_seed = NOW();
 #ifdef DEBUG_R
-    printf("main : rand val : %d", (rand_seed.tv_nsec & 1));
+    printf("main : rand val : %d\n", (rand_seed.tv_nsec & 1));
 #endif
     return rand_seed.tv_nsec & 1;
 }
@@ -87,11 +90,15 @@ void buttonUpdate() {
 
     if (buff != last_button_state) // if the button signal detected(pressed or noise),
         last_pushed = NOW();         
-    if (timePassed_ns(&last_pushed) > debounce_time_us) // count the time a little
+    if (timePassed_us(&last_pushed) > debounce_time_us) // count the time a little
         if (buff != curr_button_state) { // if the button signal is still changed
             curr_button_state = buff;
-            if (curr_button_state == '1')
+            if (curr_button_state == '1') {
+#ifdef DEBUG_TIME
+                printf("buttonUpdate : pressed\n");
+#endif
                 toggle_button_state = !toggle_button_state;
+            }
         }
     last_button_state = buff; // last_button_state will follow the signal(pressed or noise).
 }
@@ -162,13 +169,13 @@ int main(void) {
     // game started. wait 2sec...
     int game_mode = SERVIVAL;
     time_ref = NOW();
-    while (timePassed_ns(&time_ref) < (2 * SEC2nSEC)) buttonUpdate();
+    while (timePassed_us(&time_ref) < (2 * SEC2uSEC)) buttonUpdate();
     if (toggle_button_state == 0) {
         toggle_button_state = 1;
         game_mode = DEATH_MATCH;
     }
 #ifdef DEBUG
-    printf("main : game starts. curr game mode : %s", game_mode == SERVIVAL ? "SERVIVAL" : "DEATH_MATCH");
+    printf("main : game starts. curr game mode : %s\n", game_mode == SERVIVAL ? "SERVIVAL" : "DEATH_MATCH");
 #endif
 
     // initialize variables for loop
@@ -179,7 +186,7 @@ int main(void) {
     int rpi_dir, usr_dir, usr_dir0, usr_dir1;
     time_ref = NOW();
 #ifdef DEBUG
-    int current = 1;
+    int current = 0;
 #endif
 
     while (toggle_button_state) {
@@ -187,32 +194,32 @@ int main(void) {
 
         FND(score);
         buttonUpdate();
-        passed_time_from_ref = timePassed_ns(&time_ref);
+        passed_time_from_ref = timePassed_us(&time_ref);
             /////////////////////////////////////////
-        if(passed_time_from_ref < (0.7 * SEC2nSEC)){ 
+        if(passed_time_from_ref < (0.7 * SEC2uSEC)){ 
 
 
 #ifdef DEBUG
-            if (current == 1) {printf("Stage 1\n"); current++;}
+            if (current != 1) {printf("Stage 1\n"); current = 1;}
 #endif
             playBuzzer('a'); //cham cham cham! (only once)
             rpi_dir = myRand(); //is current system clock count odd? or even?
 
             //////////////    ~0.7s    //////////////
-        } else if (passed_time_from_ref <  (1.4 * SEC2nSEC)) { 
+        } else if (passed_time_from_ref <  (1.4 * SEC2uSEC)) { 
 
 
 #ifdef DEBUG
-            if (current == 2) {printf("Stage 2\n"); current++;}
+            if (current != 2) {printf("Stage 2\n"); current = 2;}
 #endif
 
 
             //////////////    ~1.4s    //////////////
-        } else if (passed_time_from_ref < (3.1 * SEC2nSEC)) {
+        } else if (passed_time_from_ref < (3.1 * SEC2uSEC)) {
             
 
 #ifdef DEBUG
-            if (current == 3) {printf("Stage 3\n"); current++;}
+            if (current != 3) {printf("Stage 3\n"); current = 3;}
 #endif                
             if (stage_result == 1) playBuzzer('b');  // win (user side)
             else playBuzzer('c'); //stage_result == 0   lose
@@ -223,7 +230,7 @@ int main(void) {
             ////////////// after 3.1s  //////////////
 
 #ifdef DEBUG
-            if (current == 4) {printf("Stage 4\n"); current = 1;}
+            if (current != 4) {printf("Stage 4\n"); current = 4;}
 #endif  
             if (stage_result == 1) {  // win (user side)
                 score[RASPI]--;
@@ -248,7 +255,7 @@ int main(void) {
         }
     }
     time_ref = NOW();
-    while (timePassed_ns(&time_ref) < (2 * SEC2nSEC));
+    while (timePassed_us(&time_ref) < (2 * SEC2uSEC));
 
 CDevOpenFatal:
     closeAllDev();
