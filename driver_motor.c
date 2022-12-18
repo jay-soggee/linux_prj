@@ -34,10 +34,23 @@ static ssize_t driver_write(struct file *File, const char *user_buffer, size_t c
 	/* Copy data to user */
 	not_copied = copy_from_user(&value, user_buffer, to_copy);
 
-	char dir = (value - (-90) / (-90 - 90)) * (2.0 - 1.0) + 1.0;
-
-	/* Set PWM */
-	pwm_config(pwm0, dir * 1000000, 20000000);
+    switch (value) {
+	case '0':
+		printk("Turn left \n");
+		pwm_config(pwm0, 1.0 * 1000000, 20000000);
+		break;
+	case '1':
+		printk("Center \n");
+		pwm_config(pwm0, 1.5 * 1000000, 20000000);
+		break;
+	case '2':
+		printk("Turn right \n");
+		pwm_config(pwm0, 2.0 * 1000000, 20000000);
+		break;
+	default:
+		printk("Invalid Value\n");
+		break;
+	}
 
 	/* Calculate data */
 	delta = to_copy - not_copied;
