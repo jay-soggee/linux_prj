@@ -51,6 +51,7 @@ static ssize_t driver_write(struct file *File, const char *user_buffer, size_t c
 		printk("Invalid Value\n");
 		break;
 	}
+    pwm_enable(pwm0);
 
 	/* Calculate data */
 	delta = to_copy - not_copied;
