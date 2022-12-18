@@ -104,6 +104,9 @@ void buttonUpdate() {
 }
 
 void writeLED(const int winflag) {
+    static int prev_winflag = '0';
+    if (prev_winflag == winflag) return;
+
     char buff;
     if      (winflag == LED_WIN)
         buff = '1'; // blue LED
@@ -112,6 +115,8 @@ void writeLED(const int winflag) {
     else // (winflag == LED_LOSE)
         buff = '0'; // red LED
     write(dev_gpio, &buff, 1);
+
+    prev_winflag = winflag;
 }
 
 
@@ -119,10 +124,11 @@ void writeLED(const int winflag) {
 
 void playBuzzer(char song) {
     static char prev_song = 'i';
-    if (prev_song != song) {
-        write(dev_bzzr, &song, 1);
-        prev_song = song;
-    }
+    if (prev_song == song) return;
+
+    write(dev_bzzr, &song, 1);
+    
+    prev_song = song;
 }
 
 
@@ -197,7 +203,8 @@ int main(void) {
         FND(score);
         buttonUpdate();
         passed_time_from_ref = timePassed_us(&time_ref);
-            /////////////////////////////////////////
+
+        //************* switch(passed_time) *************//
         if (passed_time_from_ref < (0.7 * SEC2uSEC)){ 
 
 
@@ -217,7 +224,6 @@ int main(void) {
 #ifdef DEBUG
             if (current != 2) {printf("Stage 2 : rpi_dir = %d, usr_dir0 = \n", rpi_dir); current = 2;}
 #endif
-            writeLED(LED_OFF);
             //TODO: motor set to dir_rpi (only once)
             //FIXME: get user face direction1.
 
@@ -229,27 +235,30 @@ int main(void) {
 #ifdef DEBUG
             if (current != 3) {printf("Stage 3 : usr_dir1 = \n"); current = 3;}
 #endif                
-            if (stage_result == 1) playBuzzer('b');  // win (user side)
-            else playBuzzer('c'); //stage_result == 0   lose
+            if (stage_result == 1) {  // win (user side) 
+                playBuzzer('b');
+                writeLED(LED_WIN);
+            }
+            else { //stage_result == 0   lose
+                playBuzzer('c');
+                writeLED(LED_LOSE);
+            }
             //FIXME: compute user's decision and update the result.
+
 
             //////////////    ~4.1s    //////////////
         } else {
             ////////////// after 4.1s  //////////////
 
+
 #ifdef DEBUG
             if (current != 4) {printf("Stage 4\n"); current = 4;}
 #endif  
-            if (stage_result == 1) {  // win (user side)
-                score[RASPI]--;
-                writeLED(LED_WIN);
-            }
-            else {                    // lose
-                score[USER]--;
-                writeLED(LED_LOSE);
-            }
+            writeLED(LED_OFF);
+            if (stage_result == 1) score[RASPI]--; // win (user side)
+            else                   score[USER ]--; // lose
 
-            if (--stage_count && (score[RASPI] && score[USER])) {
+            if ((--stage_count >= 0) && (score[RASPI] && score[USER])) {
                 // if the game isn't over
                 time_ref = NOW();
             } else { // if the game is over.
@@ -264,7 +273,8 @@ int main(void) {
     }
     time_ref = NOW();
     while (timePassed_us(&time_ref) < (2 * SEC2uSEC));
-
+    writeLED(LED_OFF);
+    
 CDevOpenFatal:
     closeAllDev();
 
