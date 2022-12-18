@@ -26,7 +26,7 @@ Pitime NOW() {
 int isTimePassed_us(Pitime* ref, int time_us) {
     // 1s = 1,000,000us, 1us = 1,000ns
     int time_sec  = time_us / 1000000;
-    int time_nsec = (time_us - time_sec) * 1000;
+    int time_nsec = (time_us % 1000000) * 1000;
     int passed_sec = ref->tv_sec + time_sec;
     int passed_nsec = ref->tv_nsec + time_nsec;
     if (passed_nsec > 1000000000) { // control overflow

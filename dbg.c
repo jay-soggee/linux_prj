@@ -6,6 +6,7 @@
 
 //#define DEBUG_R
 #define DEBUG
+#define DEBUG_TIME
 
 #define DEATH_MATCH  1  // do until someone is defeated
 #define SERVIVAL     0  // do just three rounds
@@ -24,18 +25,23 @@ Pitime NOW() {
     clock_gettime(CLOCK_REALTIME, &gettime_now);
     return gettime_now;
 }
-int isTimePassed_us(Pitime* ref, int time_us) {
+Pitime time_ref;
+inline void initRefToPass() {
+    time_ref = NOW();
+}
+int isTimePassed_us(Pitime* ref, int time_to_pass_us) {
     // 1s = 1,000,000us, 1us = 1,000ns
-    int time_sec  = time_us / 1000000;
-    int time_nsec = (time_us % 1000000) * 1000;
-    int passed_sec = ref->tv_sec + time_sec;
-    int passed_nsec = ref->tv_nsec + time_nsec;
-    if (passed_nsec > 1000000000) { // control overflow
-        passed_sec++;
-        passed_nsec -= 1000000000;
-    }
+    int time_to_pass_s  =  time_us / 1000000;
+    int time_to_pass_us = (time_us % 1000000) * 1000;
     clock_gettime(CLOCK_REALTIME, &gettime_now);
-    return (gettime_now.tv_sec <= passed_sec) ? 0 : (gettime_now.tv_nsec < passed_nsec) ? 0 : 1;
+    int time_passed_us  = ref->tv_nsec - gettime_now.tv_nsec;
+    int underflow = time_passed_us < 0 ? 1 : 0;
+    if (underflow)  time_passed_us + 1000000000;
+    int time_passed_s   = ref->tv_sec  - gettime_now.tv_sec - underflow;
+#ifdef DEBUG_TIME
+    int current = 1;
+#endif
+    return time_passed_s > time_to_pass_s ? 1 : time_passed_us > time_to_pass_us ? 1 : 0;
 }
 
 int myRand() {
@@ -155,8 +161,8 @@ int main(void) {
     while (!toggle_button_state);
 
     // game started. wait 2sec...
-    Pitime time_ref = NOW();
     int game_mode = SERVIVAL;
+    initRefToPass();
     while (!isTimePassed_us(&time_ref, 2000000)) buttonUpdate();
     if (toggle_button_state == 0) {
         toggle_button_state = 1;
@@ -169,7 +175,7 @@ int main(void) {
     int stage_count = (game_mode == SERVIVAL) ? 3 : 999999999;
     int stage_result = 1;
     int rpi_dir, usr_dir, usr_dir0, usr_dir1;
-    time_ref = NOW();
+    initRefToPass();
 #ifdef DEBUG
     int current = 1;
 #endif
@@ -224,7 +230,7 @@ int main(void) {
             }
 
             if (--stage_count && (score[RASPI] && score[USER])) {
-                time_ref = NOW();
+                initRefToPass();
             } else { // if game ends.
                 if (score[USER] >= score[RASPI])
                     playBuzzer('d'); // user won  this game
@@ -235,7 +241,7 @@ int main(void) {
             }
         }
     }
-    time_ref = NOW();
+    initRefToPass();
     while (!isTimePassed_us(&time_ref, 2000000));
 
 CDevOpenFatal:
