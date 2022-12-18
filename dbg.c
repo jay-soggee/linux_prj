@@ -127,7 +127,7 @@ void playBuzzer(char song) {
     if (prev_song == song) return;
 
     write(dev_bzzr, &song, 1);
-    
+
     prev_song = song;
 }
 
@@ -234,7 +234,8 @@ int main(void) {
 
 #ifdef DEBUG
             if (current != 3) {printf("Stage 3 : usr_dir1 = \n"); current = 3;}
-#endif                
+#endif
+            //FIXME: is_result_computed
             if (stage_result == 1) {  // win (user side) 
                 playBuzzer('b');
                 writeLED(LED_WIN);
