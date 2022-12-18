@@ -30,18 +30,24 @@ inline void initRefToPass() {
     time_ref = NOW();
 }
 int isTimePassed_us(Pitime* ref, int time_to_pass_us) {
+    int time_to_pass_s;
+    int time_to_pass_ns;
+    int time_passed_ns;
+    int time_passed_s;
+    int underflow;
+    
     // 1s = 1,000,000us, 1us = 1,000ns
-    int time_to_pass_s  =  time_to_pass_us / 1000000;
-    int time_to_pass_us = (time_to_pass_us % 1000000) * 1000;
+    time_to_pass_s  =  time_to_pass_us / 1000000;
+    time_to_pass_ns = (time_to_pass_us % 1000000) * 1000;
     clock_gettime(CLOCK_REALTIME, &gettime_now);
-    int time_passed_us  = ref->tv_nsec - gettime_now.tv_nsec;
-    int underflow = time_passed_us < 0 ? 1 : 0;
-    if (underflow)  time_passed_us + 1000000000;
-    int time_passed_s   = ref->tv_sec  - gettime_now.tv_sec - underflow;
+    time_passed_ns  = ref->tv_nsec - gettime_now.tv_nsec;
+    underflow = time_passed_ns < 0 ? 1 : 0;
+    if (underflow) time_passed_ns + 1000000000;
+    time_passed_s   = ref->tv_sec  - gettime_now.tv_sec - underflow;
 #ifdef DEBUG_TIME
-    int current = 1;
+    if (time_passed_s < 0) printf("isTimePassed_us : !");
 #endif
-    return time_passed_s > time_to_pass_s ? 1 : time_passed_us > time_to_pass_us ? 1 : 0;
+    return time_passed_s < time_to_pass_s ? 0 : time_passed_ns < time_to_pass_ns ? 0 : 1;
 }
 
 int myRand() {
