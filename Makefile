@@ -6,12 +6,13 @@ KDIR = ~/workspace/kernel
 CCC = g++
 LIB_PATH = ~/sdm/src/include
 LIB = SRC
+INCLUDE_PATH = /usr/local/lib
 RESULT = dbg
 SOURCE = $(RESULT).cpp
 
 all :
 	make -C $(KDIR) M=$(PWD) modules 
-	$(CCC) -I$(LIB_PATH) -L$(LIB_PATH) -o $(RESULT) $(SOURCE) -lrt -l$(LIB) `pkg-config opencv4 --libs --cflags`
+	$(CCC) -I$(LIB_PATH) -L$(INCLUDE_PATH) -o $(RESULT) $(SOURCE) -lrt -l$(LIB) `pkg-config opencv4 --libs --cflags`
 
 clean:
 	make -C $(KDIR) M=$(PWD) clean 
