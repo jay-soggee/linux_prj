@@ -130,16 +130,16 @@ void playBuzzer(char song) {
 
 ////////////////////// 7-Segment //////////////////////
 
-#define D1 0x07
-#define D2 0x0B
-#define D3 0x0D
-#define D4 0x0e
+#define D1 0x0e
+#define D2 0x0D
+#define D3 0x0B
+#define D4 0x07
 
 const char seg_num[10] = {
     0x3F, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x27, 0x7F, 0x6F
 };
 const char seg_dot = 0x80;
-int FND(int* score) {
+int FND(int* score) { //TODO: FND in trouble
     unsigned short data[3];
     static int n = 0;
 
@@ -189,7 +189,7 @@ int main(void) {
     
 
     // wait for the start button pressed (behave as toggle)
-    do {updateButton();} 
+    do { updateButton(); } 
     while (!toggle_button_state);
 
     // game started. wait 2sec...
@@ -242,7 +242,7 @@ int main(void) {
 #ifdef DEBUG
             if (current != 2) {printf("Stage 2 : rpi_dir = %d, usr_dir0 = \n", rpi_dir); current = 2;}
 #endif
-            setMotor(rpi_dir);
+            setMotor(rpi_dir); //TODO: 모터가 너무 빨리 방향을 바꿈
             //FIXME: get user face direction1.
 
 
