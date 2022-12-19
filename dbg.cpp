@@ -111,7 +111,7 @@ int toggle_button_state = 0;
 
 // update toggle button signal w/ signal debouncing
 void updateButton() {
-    const  int      debounce_time_us = 40;
+    const  int      debounce_time_us = 80;
            char     buff;
     static char     last_button_state = '0';
     static char     curr_button_state = '0';
@@ -263,6 +263,7 @@ int main(void) {
     int rpi_dir, usr_dir, usr_dir0, usr_dir1;
     time_ref = NOW();
     setMotor(MTR_CENT);
+    eav_status = head_pose_eav0;
 #ifdef DEBUG
     int current = 0;
 #endif
@@ -279,10 +280,10 @@ int main(void) {
 
         modelt.track(Image, current_shape);
         cv::Vec3d eav;
-        eav_status = head_pose_eav0;
+        
 
         //************* switch(passed_time) *************//
-        if (passed_time_from_ref < (0.7 * SEC2uSEC)){ 
+        if (passed_time_from_ref < (1.4 * SEC2uSEC)){ 
 
 
 #ifdef DEBUG
@@ -295,7 +296,7 @@ int main(void) {
 
 
             //////////////    ~0.7s    //////////////
-        } else if (passed_time_from_ref < (1.4 * SEC2uSEC)) { 
+        } else if (passed_time_from_ref < (2.8 * SEC2uSEC)) { 
             if(eav_status == head_pose_eav0) {
                 modelt.EstimateHeadPose(current_shape, eav);
                 head_pose_0 = eav[1];
@@ -307,13 +308,13 @@ int main(void) {
 #ifdef DEBUG
             if (current != 2) {printf("Stage 2 : rpi_dir = %d, usr_dir0 = \n", rpi_dir); current = 2;}
 #endif
-            if (passed_time_from_ref < (1.12 * SEC2uSEC)) 
+            if (passed_time_from_ref < (2.3 * SEC2uSEC)) 
                 setMotor(rpi_dir);
             //FIXME: get user head pose 1.
 
 
             //////////////    ~1.4s    //////////////
-        } else if (passed_time_from_ref < (4.1 * SEC2uSEC)) {
+        } else if (passed_time_from_ref < (7 * SEC2uSEC)) {
             if(eav_status == head_pose_eav1) {
                 modelt.EstimateHeadPose(current_shape, eav);
                 head_pose_1 = eav[1];
@@ -353,7 +354,7 @@ int main(void) {
         } else {
             ////////////// after 4.1s  //////////////
 
-
+            eav_status = head_pose_eav0;
 #ifdef DEBUG
             if (current != 4) {printf("Stage 4\n"); current = 4;}
 #endif  
@@ -375,7 +376,7 @@ int main(void) {
         }
     }
     time_ref = NOW();
-    while (timePassed_us(&time_ref) < (2 * SEC2uSEC));
+    while (timePassed_us(&time_ref) < (3 * SEC2uSEC));
     writeLED(LED_OFF);
     setMotor(MTR_CENT);
 
