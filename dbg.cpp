@@ -34,9 +34,9 @@ using namespace cv;
 /****************/
 
 //#define DEBUG_R
-#define DEBUG
-#define DEBUG_BTN
-#define DEBUG_TIME
+//#define DEBUG
+//#define DEBUG_BTN
+//#define DEBUG_TIME
 
 #define DEATH_MATCH     1  // do until someone is defeated
 #define SERVIVAL        0  // do just three rounds
@@ -177,7 +177,7 @@ void FND(int* score) { //TODO: FND in trouble
 
     data[0] = (seg_num[score[USER ]] << 4) | D1;
     data[1] = (seg_num[score[RASPI]] << 4) | D4;
-    data[2] = (seg_dot               << 4) | D3;
+    data[2] = (seg_dot               << 4) | D2;
 
     write(dev_fnd, &data[n], 2);
     n = (n + 1) % 3;
@@ -301,7 +301,9 @@ int main(void) {
                 modelt.EstimateHeadPose(current_shape, eav);
                 head_pose_0 = eav[1];
                 eav_status = head_pose_eav1;
+#ifdef DEBUG
                 printf("head_pose_0 : %d\n", head_pose_0);
+#endif
             }
 
 
@@ -319,7 +321,9 @@ int main(void) {
                 modelt.EstimateHeadPose(current_shape, eav);
                 head_pose_1 = eav[1];
                 eav_status = head_pose_eav_off0; 
-                printf("head_pose_1 : %d\n", head_pose_1);               
+#ifdef DEBUG
+                printf("head_pose_1 : %d\n", head_pose_1); 
+#endif              
             }
             
 
@@ -341,9 +345,9 @@ int main(void) {
             else { // if(eav_status == head_pose_eav_off0)  
                 if((head_pose_0 - head_pose_1) < 0) head_dir = HEAD_RIGHT;
                 else head_dir = HEAD_LEFT;
-
+#ifdef DEBUG
                 printf("head_dir    : %d\n", head_dir);
-
+#endif
                 if(rpi_dir == head_dir) stage_result = 0; // rip win
                 else stage_result = 1; // usr win
 
