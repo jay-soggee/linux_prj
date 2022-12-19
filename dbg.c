@@ -134,15 +134,13 @@ void playBuzzer(char song) {
 
 ////////////////////// 7-Segment //////////////////////
 
-#define D1 0x0E
-#define D2 0x0D
-#define D3 0x0B
-#define D4 0x07
+#define D1 0x01
+#define D2 0x02
+#define D3 0x04
+#define D4 0x08
+char seg_num[10] = {0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xd8, 0x80, 0x90};
+const char seg_dot = 0x7f;
 
-const char seg_num[10] = {
-    0x3F, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x27, 0x7F, 0x6F
-};
-const char seg_dot = 0x80;
 int FND(int* score) { //TODO: FND in trouble
     unsigned short data[3];
     static int n = 0;
@@ -150,7 +148,7 @@ int FND(int* score) { //TODO: FND in trouble
     data[0] = (seg_num[score[USER ]] << 4) | D1;
     data[1] = (seg_num[score[RASPI]] << 4) | D4;
     data[2] = (seg_dot               << 4) | D3;
-    usleep(5);
+
     write(dev_fnd, &data[n], 2);
     n = (n + 1) % 3;
 }
@@ -235,13 +233,14 @@ int main(void) {
 
 
             //////////////    ~0.7s    //////////////
-        } else if (passed_time_from_ref <  (1.4 * SEC2uSEC)) { 
+        } else if (passed_time_from_ref < (1.4 * SEC2uSEC)) { 
 
 
 #ifdef DEBUG
             if (current != 2) {printf("Stage 2 : rpi_dir = %d, usr_dir0 = \n", rpi_dir); current = 2;}
 #endif
-            setMotor(rpi_dir); //TODO: 모터가 너무 빨리 방향을 바꿈
+            if (passed_time_from_ref < (1.12 * SEC2uSEC)) 
+                setMotor(rpi_dir);
             //FIXME: get user face direction1.
 
 

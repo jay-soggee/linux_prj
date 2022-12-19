@@ -35,76 +35,76 @@ static ssize_t driver_write(struct file *File, const char *user_buffer, size_t c
     //////  pi pin - 2  3  4  5  ::  7  8  16 17 20 21 24 25   ////// 
     //////  FNDpin - 12 9  8  6  ::  11 7  4  2  1  10 5  3    //////
     if (value & (1 << 0)){
-        gpio_set_value(2, 1);
+        gpio_set_value(2, 0);
     }   
     else{
-        gpio_set_value(2, 0);
+        gpio_set_value(2, 1);
     }
     if (value & (1 << 1)){
-        gpio_set_value(3, 1);
+        gpio_set_value(3, 0);
     }   
     else{
-        gpio_set_value(3, 0);
+        gpio_set_value(3, 1);
     }
     if (value & (1 << 2)){
-        gpio_set_value(4, 1);
+        gpio_set_value(4, 0);
     }   
     else{
-        gpio_set_value(4, 0);
+        gpio_set_value(4, 1);
     }
     if (value & (1 << 3)){
-        gpio_set_value(5, 1);
+        gpio_set_value(5, 0);
     }   
     else {
-        gpio_set_value(5, 0);
+        gpio_set_value(5, 1);
     }                    
     if (value & (1 << 4)) {
-        gpio_set_value(7, 1);
+        gpio_set_value(7, 0);
     }   
     else {
-        gpio_set_value(7, 0);
+        gpio_set_value(7, 1);
     }                 
     if (value & (1 << 5)){
-        gpio_set_value(8, 1);
+        gpio_set_value(8, 0);
     }  
     else{
-        gpio_set_value(8, 0);
+        gpio_set_value(8, 1);
     }                    
     if (value & (1 << 6)){
-        gpio_set_value(16, 1);
+        gpio_set_value(16, 0);
     }   
     else{ 
-        gpio_set_value(16, 0);
+        gpio_set_value(16, 1);
     }                   
     if (value & (1 << 7)){
-        gpio_set_value(17, 1);
+        gpio_set_value(17, 0);
     }   
     else {
-        gpio_set_value(17, 0);
+        gpio_set_value(17, 1);
     }                  
     if (value & (1 << 8)) {
-        gpio_set_value(20, 1);
+        gpio_set_value(20, 0);
     }   
     else {
-        gpio_set_value(20, 0);
+        gpio_set_value(20, 1);
     }
     if (value & (1 << 9)) {
-        gpio_set_value(21, 1);
+        gpio_set_value(21, 0);
     }   
     else {
-        gpio_set_value(21, 0);
+        gpio_set_value(21, 1);
     }
     if (value & (1 << 10)) {
-        gpio_set_value(24, 1);
+        gpio_set_value(24, 0);
     }  
     else {
-        gpio_set_value(24, 0);
+        gpio_set_value(24, 1);
     }
     if (value & (1 << 11)) {
-        gpio_set_value(25, 1);
+        gpio_set_value(25, 0);
     }  
     else {
-        gpio_set_value(25, 0);
+        gpio_set_value(25, 1);
     }                  
     
     /*Calculate data*/
