@@ -171,7 +171,7 @@ void playBuzzer(char song) {
 char seg_num[10] = {0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xd8, 0x80, 0x90};
 const char seg_dot = 0x7f;
 
-int FND(int* score) { //TODO: FND in trouble
+void FND(int* score) { //TODO: FND in trouble
     unsigned short data[3];
     static int n = 0;
 
@@ -300,6 +300,7 @@ int main(void) {
                 modelt.EstimateHeadPose(current_shape, eav);
                 head_pose_0 = eav[1];
                 eav_status = head_pose_eav1;
+                printf("head_pose_0 : %d\n", head_pose_0);
             }
 
 
@@ -316,7 +317,8 @@ int main(void) {
             if(eav_status == head_pose_eav1) {
                 modelt.EstimateHeadPose(current_shape, eav);
                 head_pose_1 = eav[1];
-                eav_status = head_pose_eav_off0;                
+                eav_status = head_pose_eav_off0; 
+                printf("head_pose_1 : %d\n", head_pose_1);               
             }
             
 
@@ -338,6 +340,8 @@ int main(void) {
             else { // if(eav_status == head_pose_eav_off0)  
                 if((head_pose_0 - head_pose_1) < 0) head_dir = HEAD_RIGHT;
                 else head_dir = HEAD_LEFT;
+
+                printf("head_dir    : %d\n", head_dir);
 
                 if(rpi_dir == head_dir) stage_result = 0; // rip win
                 else stage_result = 1; // usr win
