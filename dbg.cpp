@@ -225,7 +225,7 @@ int main(void) {
     if (!mCamera.isOpened()) {
         printf("Can`t open Camera\n");
         return -1;
-    }    
+    }
 
     // For Face Detection && Face Landmark Point
     cv::Mat Image;
@@ -237,7 +237,6 @@ int main(void) {
     
     // open character devices
     int opn_err = openAllDev();
-    if (opn_err & ERR_OPN_GPIO) goto CDevOpenFatal;
     
 
     // wait for the start button pressed (behave as toggle)
@@ -376,7 +375,7 @@ int main(void) {
     writeLED(LED_OFF);
     setMotor(MTR_CENT);
 
-CDevOpenFatal:
+
     closeAllDev();
 
     return 0;
