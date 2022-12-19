@@ -9,6 +9,10 @@
 #define DEBUG_BTN
 #define DEBUG_TIME
 
+#define DEATH_MATCH     1  // do until someone is defeated
+#define SERVIVAL        0  // do just three rounds
+#define USER        0  // score index
+#define RASPI       1
 
 ////////////////////// clock timer //////////////////////
 
@@ -130,7 +134,7 @@ void playBuzzer(char song) {
 
 ////////////////////// 7-Segment //////////////////////
 
-#define D1 0x0e
+#define D1 0x0E
 #define D2 0x0D
 #define D3 0x0B
 #define D4 0x07
@@ -139,13 +143,14 @@ const char seg_num[10] = {
     0x3F, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x27, 0x7F, 0x6F
 };
 const char seg_dot = 0x80;
+unsigned short data[3] = {0x06e, 0x807, 0x5bb};
 int FND(int* score) { //TODO: FND in trouble
-    unsigned short data[3];
+    // unsigned short data[3];
     static int n = 0;
 
-    data[0] = (seg_num[score[0]] << 4) | D1;
-    data[2] = (seg_dot           << 4) | D3;
-    data[1] = (seg_num[score[1]] << 4) | D4;
+    // data[0] = (seg_num[score[USER ]] << 4) | D1;
+    // data[1] = (seg_num[score[RASPI]] << 4) | D4;
+    // data[2] = (seg_dot               << 4) | D3;
 
     write(dev_fnd, &data[n], 2);
     n = (n + 1) % 3;
@@ -174,11 +179,6 @@ void setMotor(int motor_dir){
 
 
 ////////////////////// main //////////////////////
-
-#define DEATH_MATCH     1  // do until someone is defeated
-#define SERVIVAL        0  // do just three rounds
-#define USER        0  // score index
-#define RASPI       1
 
 int main(void) {
     Pitime time_ref;
