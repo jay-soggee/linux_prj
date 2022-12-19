@@ -4,13 +4,14 @@ obj-m += driver_fnd.o
 obj-m += driver_motor.o
 KDIR = ~/workspace/kernel
 CCC = g++
-
+LIB_PATH = /usr/local/lib
+LIB = SRC
 RESULT = dbg
-SRC = $(RESULT).cpp
+SOURCE = $(RESULT).cpp
 
 all :
 	make -C $(KDIR) M=$(PWD) modules 
-	$(CCC) -o $(RESULT) $(SRC) -lrt -lSRC `pkg-config opencv4 --libs --cflags`
+	$(CCC) -I$(LIB_PATH) -L$(LIB_PATH) -o $(RESULT) $(SOURCE) -lrt -l$(LIB) `pkg-config opencv4 --libs --cflags`
 
 clean:
 	make -C $(KDIR) M=$(PWD) clean 
