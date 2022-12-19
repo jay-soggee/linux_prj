@@ -10,7 +10,7 @@ SRC = $(RESULT).cpp
 
 all :
 	make -C $(KDIR) M=$(PWD) modules 
-	$(CCC) -o $(RESULT) $(SRC) -lrt -lSRC
+	$(CCC) -o $(RESULT) $(SRC) -lrt -lSRC `pkg-config opencv4 --libs --cflags`
 
 clean:
 	make -C $(KDIR) M=$(PWD) clean 
