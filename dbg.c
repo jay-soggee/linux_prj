@@ -143,15 +143,14 @@ const char seg_num[10] = {
     0x3F, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x27, 0x7F, 0x6F
 };
 const char seg_dot = 0x80;
-unsigned short data[3] = {0x06e, 0x807, 0x5bb};
 int FND(int* score) { //TODO: FND in trouble
-    // unsigned short data[3];
+    unsigned short data[3];
     static int n = 0;
 
-    // data[0] = (seg_num[score[USER ]] << 4) | D1;
-    // data[1] = (seg_num[score[RASPI]] << 4) | D4;
-    // data[2] = (seg_dot               << 4) | D3;
-
+    data[0] = (seg_num[score[USER ]] << 4) | D1;
+    data[1] = (seg_num[score[RASPI]] << 4) | D4;
+    data[2] = (seg_dot               << 4) | D3;
+    usleep(1);
     write(dev_fnd, &data[n], 2);
     n = (n + 1) % 3;
 }
