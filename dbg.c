@@ -150,7 +150,7 @@ int FND(int* score) { //TODO: FND in trouble
     data[0] = (seg_num[score[USER ]] << 4) | D1;
     data[1] = (seg_num[score[RASPI]] << 4) | D4;
     data[2] = (seg_dot               << 4) | D3;
-    usleep(1);
+    usleep(5);
     write(dev_fnd, &data[n], 2);
     n = (n + 1) % 3;
 }
