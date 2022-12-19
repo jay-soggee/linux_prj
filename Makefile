@@ -10,7 +10,7 @@ SRC = $(RESULT).c
 
 all :
 	make -C $(KDIR) M=$(PWD) modules 
-	$(CCC) -o $(RESULT) $(SRC) -lrt
+	$(CCC) -o $(RESULT) $(SRC) -lrt -lSRC
 
 clean:
 	make -C $(KDIR) M=$(PWD) clean 
