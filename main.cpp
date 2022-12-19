@@ -4,10 +4,39 @@
 #include <fcntl.h>
 #include <time.h> // need -lrt option. means to use the real-time library
 
+/****** AI ******/
+#include <vector>
+#include <iostream>
+#include <fstream>
+
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/objdetect/objdetect.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/videoio.hpp>
+#include <opencv2/photo.hpp>
+
+#include "ldmarkmodel.h"
+
+using namespace std;
+using namespace cv;
+
+#define head_pose_eav0      0
+#define head_pose_eav1      1
+#define head_pose_eav_off0  2
+#define head_pose_eav_off1  3
+
+#define HEAD_CENTER         2
+#define HEAD_LEFT           0
+#define HEAD_RIGHT          1
+
+/****************/
+
 //#define DEBUG_R
-#define DEBUG
-#define DEBUG_BTN
-#define DEBUG_TIME
+//#define DEBUG
+//#define DEBUG_BTN
+//#define DEBUG_TIME
 
 #define DEATH_MATCH     1  // do until someone is defeated
 #define SERVIVAL        0  // do just three rounds
@@ -82,7 +111,7 @@ int toggle_button_state = 0;
 
 // update toggle button signal w/ signal debouncing
 void updateButton() {
-    const  int      debounce_time_us = 40;
+    const  int      debounce_time_us = 80;
            char     buff;
     static char     last_button_state = '0';
     static char     curr_button_state = '0';
@@ -92,7 +121,7 @@ void updateButton() {
 
     if (buff != last_button_state) // if the button signal detected(pressed or noise),
         last_pushed = NOW();         
-    if (timePassed_us(&last_pushed) > debounce_time_us) // count the time a little
+    if (timePassed_us(&last_pushed) > debounce_time_us){ // count the time a little
         if (buff != curr_button_state) { // if the button signal is still changed
             curr_button_state = buff;
             if (curr_button_state == '1') {
@@ -102,6 +131,7 @@ void updateButton() {
                 toggle_button_state = !toggle_button_state;
             }
         }
+    }
     last_button_state = buff; // last_button_state will follow the signal(pressed or noise).
 }
 
@@ -141,13 +171,13 @@ void playBuzzer(char song) {
 char seg_num[10] = {0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xd8, 0x80, 0x90};
 const char seg_dot = 0x7f;
 
-int FND(int* score) { //TODO: FND in trouble
+void FND(int* score) { //TODO: FND in trouble
     unsigned short data[3];
     static int n = 0;
 
     data[0] = (seg_num[score[USER ]] << 4) | D1;
     data[1] = (seg_num[score[RASPI]] << 4) | D4;
-    data[2] = (seg_dot               << 4) | D3;
+    data[2] = (seg_dot               << 4) | D2;
 
     write(dev_fnd, &data[n], 2);
     n = (n + 1) % 3;
@@ -180,9 +210,33 @@ void setMotor(int motor_dir){
 int main(void) {
     Pitime time_ref;
 
+    // AI Dataset Open && Camera open
+    ldmarkmodel modelt;
+    std::string modelFilePath = "roboman-landmark-model.bin";
+
+    while (!load_ldmarkmodel(modelFilePath, modelt)) {
+        std::cout << "load_ldmarkmodel error." << std::endl;
+        std::cin >> modelFilePath;
+    }
+
+    cv::VideoCapture mCamera;
+
+    mCamera.open("/dev/video0", CAP_V4L2); // ***
+    if (!mCamera.isOpened()) {
+        printf("Can`t open Camera\n");
+        return -1;
+    }
+
+    // For Face Detection && Face Landmark Point
+    cv::Mat Image;
+    cv::Mat current_shape;
+
+    int eav_status;
+    int head_pose_0, head_pose_1;
+    int head_dir;
+    
     // open character devices
     int opn_err = openAllDev();
-    if (opn_err & ERR_OPN_GPIO) goto CDevOpenFatal;
     
 
     // wait for the start button pressed (behave as toggle)
@@ -209,6 +263,7 @@ int main(void) {
     int rpi_dir, usr_dir, usr_dir0, usr_dir1;
     time_ref = NOW();
     setMotor(MTR_CENT);
+    eav_status = head_pose_eav0;
 #ifdef DEBUG
     int current = 0;
 #endif
@@ -219,8 +274,16 @@ int main(void) {
         updateButton();
         passed_time_from_ref = timePassed_us(&time_ref);
 
+        // Face Detection && Landmark Point Traking
+        mCamera.read(Image);
+        if (Image.empty()) break;
+
+        modelt.track(Image, current_shape);
+        cv::Vec3d eav;
+        
+
         //************* switch(passed_time) *************//
-        if (passed_time_from_ref < (0.7 * SEC2uSEC)){ 
+        if (passed_time_from_ref < (1.4 * SEC2uSEC)){ 
 
 
 #ifdef DEBUG
@@ -229,45 +292,73 @@ int main(void) {
             playBuzzer('a'); //cham cham cham! (only once)
             rpi_dir = myRand(); //is current system clock count odd? or even?
             setMotor(MTR_CENT);
-            //FIXME: get user face direction0.
+            //FIXME: get user head pose 0.
 
 
             //////////////    ~0.7s    //////////////
-        } else if (passed_time_from_ref < (1.4 * SEC2uSEC)) { 
+        } else if (passed_time_from_ref < (2.8 * SEC2uSEC)) { 
+            if(eav_status == head_pose_eav0) {
+                modelt.EstimateHeadPose(current_shape, eav);
+                head_pose_0 = eav[1];
+                eav_status = head_pose_eav1;
+#ifdef DEBUG
+                printf("head_pose_0 : %d\n", head_pose_0);
+#endif
+            }
 
 
 #ifdef DEBUG
             if (current != 2) {printf("Stage 2 : rpi_dir = %d, usr_dir0 = \n", rpi_dir); current = 2;}
 #endif
-            if (passed_time_from_ref < (1.12 * SEC2uSEC)) 
+            if (passed_time_from_ref < (2.3 * SEC2uSEC)) 
                 setMotor(rpi_dir);
-            //FIXME: get user face direction1.
+            //FIXME: get user head pose 1.
 
 
             //////////////    ~1.4s    //////////////
-        } else if (passed_time_from_ref < (4.1 * SEC2uSEC)) {
+        } else if (passed_time_from_ref < (7 * SEC2uSEC)) {
+            if(eav_status == head_pose_eav1) {
+                modelt.EstimateHeadPose(current_shape, eav);
+                head_pose_1 = eav[1];
+                eav_status = head_pose_eav_off0; 
+#ifdef DEBUG
+                printf("head_pose_1 : %d\n", head_pose_1); 
+#endif              
+            }
             
 
 #ifdef DEBUG
             if (current != 3) {printf("Stage 3 : usr_dir1 = \n"); current = 3;}
 #endif
-            //FIXME: is_result_computed
-            if (stage_result == 1) {  // win (user side) 
-                playBuzzer('b');
-                writeLED(LED_WIN);
-            }
-            else { //stage_result == 0   lose
-                playBuzzer('c');
-                writeLED(LED_LOSE);
+            if(eav_status == head_pose_eav_off1) {
+                //FIXME: is_result_computed
+                if (stage_result == 1) {  // win (user side) 
+                    playBuzzer('b');
+                    writeLED(LED_WIN);
+                }
+                else { //stage_result == 0   lose
+                    playBuzzer('c');
+                    writeLED(LED_LOSE);
+                }
             }
             //FIXME: compute user's decision and update the result.
+            else { // if(eav_status == head_pose_eav_off0)  
+                if((head_pose_0 - head_pose_1) < 0) head_dir = HEAD_RIGHT;
+                else head_dir = HEAD_LEFT;
+#ifdef DEBUG
+                printf("head_dir    : %d\n", head_dir);
+#endif
+                if(rpi_dir == head_dir) stage_result = 0; // rip win
+                else stage_result = 1; // usr win
 
+                eav_status = head_pose_eav_off1;
+            }
 
             //////////////    ~4.1s    //////////////
         } else {
             ////////////// after 4.1s  //////////////
 
-
+            eav_status = head_pose_eav0;
 #ifdef DEBUG
             if (current != 4) {printf("Stage 4\n"); current = 4;}
 #endif  
@@ -289,11 +380,11 @@ int main(void) {
         }
     }
     time_ref = NOW();
-    while (timePassed_us(&time_ref) < (2 * SEC2uSEC));
+    while (timePassed_us(&time_ref) < (3 * SEC2uSEC));
     writeLED(LED_OFF);
     setMotor(MTR_CENT);
 
-CDevOpenFatal:
+
     closeAllDev();
 
     return 0;
