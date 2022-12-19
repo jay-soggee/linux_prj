@@ -10,7 +10,7 @@ SOURCE = $(RESULT).cpp
 
 all :
 	make -C $(KDIR) M=$(PWD) modules 
-	$(CCC) -I $(INCLUDE_PATH) -o $(RESULT) $(SOURCE) -lrt `pkg-config opencv4 --libs --cflags`
+	$(CCC) -O3 -I $(INCLUDE_PATH) -o $(RESULT) $(SOURCE) -lrt `pkg-config opencv4 --libs --cflags`
 
 clean:
 	make -C $(KDIR) M=$(PWD) clean 
