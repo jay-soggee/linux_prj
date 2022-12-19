@@ -6,7 +6,7 @@ KDIR = ~/workspace/kernel
 CCC = g++
 
 RESULT = dbg
-SRC = $(RESULT).c
+SRC = $(RESULT).cpp
 
 all :
 	make -C $(KDIR) M=$(PWD) modules 
