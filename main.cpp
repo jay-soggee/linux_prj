@@ -168,19 +168,20 @@ void playBuzzer(char song) {
 #define D2 0x02
 #define D3 0x04
 #define D4 0x08
-char seg_num[10] = {0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xd8, 0x80, 0x90};
+const char seg_num[10] = {0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xd8, 0x80, 0x90};
 const char seg_dot = 0x7f;
+const unsigned short seg_off = 0xfff;
 
 void FND(int* score) { //TODO: FND in trouble
-    unsigned short data[3];
+    unsigned short data[2];
     static int n = 0;
 
     data[0] = (seg_num[score[USER ]] << 4) | D1;
     data[1] = (seg_num[score[RASPI]] << 4) | D4;
-    data[2] = (seg_dot               << 4) | D2;
+    //data[2] = (seg_dot               << 4) | D2;
 
     write(dev_fnd, &data[n], 2);
-    n = (n + 1) % 3;
+    n = (n + 1) % 2;
 }
 
 
@@ -310,7 +311,7 @@ int main(void) {
 #ifdef DEBUG
             if (current != 2) {printf("Stage 2 : rpi_dir = %d, usr_dir0 = \n", rpi_dir); current = 2;}
 #endif
-            if (passed_time_from_ref < (2.3 * SEC2uSEC)) 
+            if (passed_time_from_ref < (2.24 * SEC2uSEC)) 
                 setMotor(rpi_dir);
             //FIXME: get user head pose 1.
 
@@ -383,7 +384,7 @@ int main(void) {
     while (timePassed_us(&time_ref) < (3 * SEC2uSEC));
     writeLED(LED_OFF);
     setMotor(MTR_CENT);
-
+    write(dev_fnd, &seg_off, 2);
 
     closeAllDev();
 
