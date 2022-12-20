@@ -27,8 +27,8 @@ static struct timer_list my_timer;
 struct pwm_device *pwm1 = NULL; 
 
 ///// MIDI Configurations /////
-#define BPM108 140
-#define BPM126 120
+#define BPM108 70
+#define BPM126 60
 #define NOTE_BREAK 1000000000
 unsigned long note_durations[5][7] = {
     { 3, 5, 3, 5, 1, },
