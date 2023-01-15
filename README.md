@@ -20,5 +20,5 @@ dbg.c : 작업 영역(메인코드 복사본)
 
 $$
 X[k] = \sum^{N-1}_{n=0}x[n]W_N^{nk},k=0,\cdots,N-1\\
-W_N^{nk}\colonequals \exp\left(-j\frac{2\pi}{N}nk\right)
+W_N^{nk}= \exp\left(-j\frac{2\pi}{N}nk\right)
 $$
