@@ -17,3 +17,10 @@ dbg.c : 작업 영역(메인코드 복사본)
 - FIXME : 얼굴방향인식관련
 
 - TODO : 모터관련
+
+$$
+
+X[k] = \sum^{N-1}_{n=0}x[n]W_N^{nk},k=0,\cdots,N-1\\
+W_N^{nk}\colonequals \exp\left(-j\frac{2\pi}{N}nk\right)
+
+$$
